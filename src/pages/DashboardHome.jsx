@@ -1,5 +1,3 @@
-import React from "react";
-import { auth } from "../firebase";
 import useAuth from "../hooks/useAuth";
 
 function DashboardHome({ income, expense, balance }) {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Routes, Route, Navigate, Outlet } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import LandingPage from "../pages/LandingPage";
@@ -11,14 +11,21 @@ import DashboardHome from "../pages/DashboardHome";
 import AddTransaction from "../pages/AddTransaction";
 import History from "../pages/History";
 import Analytics from "../pages/Analytics";
-import Settings from "../pages/Settings";
 import useAuth from "../hooks/useAuth";
 import DashboardSidebar from "../components/DashboardSidebar";
+import Settings from "../pages/Settings";
+import FAQ from "../pages/FAQ";
+import Contact from "../pages/Contact";
 
 // Layout رئيسي للصفحات العامة
 function MainLayout() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className="flex flex-col min-h-screen ">
       <Header />
       <main className="flex-1 px-4 ">
         <Outlet />
@@ -69,6 +76,8 @@ export default function AppRoutes() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
       </Route>
