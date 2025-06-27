@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Reset some default styles */
+main {
+  flex: 1;
+  padding: 2rem 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  direction: rtl;
+  text-align: right;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  direction: rtl;
+  text-align: right;
+}

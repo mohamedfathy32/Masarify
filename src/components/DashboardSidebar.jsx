@@ -1,0 +1,92 @@
+import React, { useState } from "react";
+import { NavLink, Link, useNavigate } from "react-router-dom";
+import { HiOutlineHome, HiOutlinePlusCircle, HiOutlineClipboardList, HiOutlineChartBar, HiOutlineCog, HiMenu, HiX, HiOutlineLogout } from "react-icons/hi";
+import { auth } from "../firebase";
+import { signOut } from "firebase/auth";
+
+const links = [
+  { to: "/dashboard", label: "الرئيسية", icon: <HiOutlineHome size={22} /> },
+  { to: "/add", label: "إضافة عملية", icon: <HiOutlinePlusCircle size={22} /> },
+  { to: "/history", label: "سجل العمليات", icon: <HiOutlineClipboardList size={22} /> },
+  { to: "/analytics", label: "التقارير", icon: <HiOutlineChartBar size={22} /> },
+  { to: "/settings", label: "الإعدادات", icon: <HiOutlineCog size={22} /> },
+];
+
+function DashboardSidebar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      console.error("خطأ في تسجيل الخروج:", error);
+    }
+  };
+
+  return (
+    <>
+      {/* Mobile Toggle Button */}
+      <button
+        onClick={toggleSidebar}
+        className="lg:hidden fixed top-4 right-4 z-50 bg-[#18181b] border border-[#222] p-2 rounded-lg text-white hover:text-teal-400 transition-colors"
+        aria-label="Toggle sidebar"
+      >
+        {isOpen ? <HiX size={20} /> : <HiMenu size={20} />}
+      </button>
+
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" 
+          onClick={toggleSidebar}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`bg-[#18181b] min-h-screen py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 h-full z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        {/* Masarify Logo/Link */}
+        <Link 
+          to="/" 
+          className="text-2xl font-bold text-teal-400 text-center mb-6 hover:text-teal-300 transition-colors no-underline"
+          onClick={() => setIsOpen(false)}
+        >
+          Masarify
+        </Link>
+        
+        <nav className="flex flex-col gap-2 flex-1">
+          {links.map(link => (
+            <NavLink
+              key={link.to}
+              to={link.to}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 no-underline ${isActive ? "bg-teal-500/20 text-teal-400" : "text-gray-200 hover:bg-[#232323]"}`
+              }
+              end={link.to === "/dashboard"}
+              onClick={() => setIsOpen(false)}
+            >
+              {link.icon}
+              <span>{link.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 text-red-400 hover:bg-red-500/20 hover:text-red-300 mt-auto"
+        >
+          <HiOutlineLogout size={22} />
+          <span>تسجيل الخروج</span>
+        </button>
+      </aside>
+    </>
+  );
+}
+
+export default DashboardSidebar; 
