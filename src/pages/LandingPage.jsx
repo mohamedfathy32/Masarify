@@ -123,7 +123,7 @@ export default function LandingPage() {
             { icon: <FaLock />, title: 'خصوصية تامة', desc: 'بياناتك مؤمنة 100% ومحفوظة لك فقط.' },
             { icon: <FaBell />, title: 'تنبيهات ذكية', desc: 'تذكير بالمصاريف والدخل تلقائيًا.' }
           ].map((item, i) => (
-            <div key={i} className="bg-[#18181b] text-white rounded-2xl p-5 text-center shadow-md border border-[#232323] hover:shadow-lg hover:scale-[1.02] transition-all">
+            <div key={i} className="bg-[#18181b] text-white rounded-2xl p-5 flex flex-col items-center shadow-md border border-[#232323] hover:shadow-lg hover:scale-[1.02] transition-all">
               <div className="text-teal-400 text-3xl mb-4">{item.icon}</div>
               <h3 className="font-semibold mb-2">{item.title}</h3>
               <p className="text-sm text-gray-400">{item.desc}</p>
