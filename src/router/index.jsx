@@ -14,6 +14,7 @@ import Analytics from "../pages/Analytics";
 import useAuth from "../hooks/useAuth";
 import DashboardSidebar from "../components/DashboardSidebar";
 import Settings from "../pages/Settings";
+import Notifications from "../pages/Notifications";
 import FAQ from "../pages/FAQ";
 import Contact from "../pages/Contact";
 
@@ -72,6 +73,7 @@ export default function AppRoutes() {
           <Route path="/history" element={<History />} />
           <Route path="/analytics" element={<Analytics />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/notifications" element={<Notifications />} />
         </Route>
       </Route>
       {/* صفحات auth خارج الـ Layout */}

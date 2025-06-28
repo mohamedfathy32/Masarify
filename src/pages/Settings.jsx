@@ -3,10 +3,18 @@ import { auth } from "../firebase";
 import { updateProfile, updatePassword } from "firebase/auth";
 import useAuth from "../hooks/useAuth";
 import { saveUserProfile, getUserProfile } from "../services/userService";
+import {
+  requestNotificationPermission,
+  saveNotificationSettings,
+  getNotificationSettings,
+  checkNotificationStatus,
+  onNotificationMessage
+} from "../services/notificationService";
 import Swal from "sweetalert2";
 
 function Settings() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState("profile");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -14,18 +22,17 @@ function Settings() {
     city: "",
     photoURL: ""
   });
+  const [imgPreview, setImgPreview] = useState(null);
+  const [imgUploading, setImgUploading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
-  const [imgUploading, setImgUploading] = useState(false);
-  const [imgPreview, setImgPreview] = useState("");
-  const [activeTab, setActiveTab] = useState("profile");
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: ""
   });
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     current: false,
@@ -33,12 +40,16 @@ function Settings() {
     confirm: false
   });
   const [notifications, setNotifications] = useState({
-    budget50: true,
-    budget80: true,
-    budget100: true,
-    transactions: true,
-    weeklyReport: false
+    budgetThresholds: {
+      "50": true,
+      "80": true,
+      "100": true
+    },
+    transactionAlerts: true,
+    weeklyReport: true,
+    monthlyReminder: true
   });
+  const [notificationStatus, setNotificationStatus] = useState("default");
   const fileInputRef = useRef();
 
   // صورة افتراضية للمستخدم
@@ -52,6 +63,8 @@ function Settings() {
 
   useEffect(() => {
     if (!user) return;
+
+    // تحميل بيانات المستخدم
     setForm(f => ({ ...f, name: user.displayName || "", photoURL: user.photoURL || "" }));
     getUserProfile(user.uid).then(profile => {
       setForm(f => ({
@@ -61,14 +74,83 @@ function Settings() {
         photoURL: user.photoURL || profile.photoURL || ""
       }));
       setImgPreview(user.photoURL || profile.photoURL);
-      // تحميل إعدادات الإشعارات
-      if (profile.notifications) {
-        setNotifications(profile.notifications);
-      }
     });
+
+    // تحميل إعدادات الإشعارات
+    loadNotificationSettings();
+
+    // التحقق من حالة الإشعارات
+    setNotificationStatus(checkNotificationStatus());
+
+    // مراقبة الإشعارات الواردة
+    const unsubscribe = onNotificationMessage((payload) => {
+      console.log("إشعار جديد:", payload);
+    });
+
+    return () => unsubscribe();
   }, [user]);
 
+  const loadNotificationSettings = async () => {
+    if (!user) return;
 
+    try {
+      const settings = await getNotificationSettings(user.uid);
+      if (settings) {
+        setNotifications(settings);
+      }
+    } catch (error) {
+      console.error("خطأ في تحميل إعدادات الإشعارات:", error);
+    }
+  };
+
+  const handleRequestNotificationPermission = async () => {
+    if (!user) return;
+
+    try {
+      const token = await requestNotificationPermission(user.uid);
+      if (token) {
+        setNotificationStatus("granted");
+        Swal.fire({
+          icon: "success",
+          title: "تم تفعيل الإشعارات!",
+          text: "ستصلك إشعارات مهمة حول ميزانيتك ومعاملاتك.",
+          confirmButtonText: "حسنًا"
+        });
+      } else {
+        setNotificationStatus("denied");
+        Swal.fire({
+          icon: "warning",
+          title: "لم يتم تفعيل الإشعارات",
+          text: "يمكنك تفعيل الإشعارات من إعدادات المتصفح.",
+          confirmButtonText: "حسنًا"
+        });
+      }
+    } catch (error) {
+      console.error("خطأ في طلب إذن الإشعارات:", error);
+    }
+  };
+
+  const handleNotificationChange = async (key, value) => {
+    const newSettings = { ...notifications };
+
+    if (key.includes('.')) {
+      const [parent, child] = key.split('.');
+      newSettings[parent] = { ...newSettings[parent], [child]: value };
+    } else {
+      newSettings[key] = value;
+    }
+
+    setNotifications(newSettings);
+
+    // حفظ الإعدادات في Firestore
+    if (user) {
+      try {
+        await saveNotificationSettings(user.uid, newSettings);
+      } catch (error) {
+        console.error("خطأ في حفظ إعدادات الإشعارات:", error);
+      }
+    }
+  };
 
   const handleChange = e => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -76,10 +158,6 @@ function Settings() {
 
   const handlePasswordChange = e => {
     setPasswordForm(f => ({ ...f, [e.target.name]: e.target.value }));
-  };
-
-  const handleNotificationChange = (key) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   // دالة لضغط الصورة
@@ -311,7 +389,7 @@ function Settings() {
             >
               المظهر
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab("budget")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "budget"
                 ? "bg-teal-500 text-white"
@@ -319,7 +397,7 @@ function Settings() {
                 }`}
             >
               إعدادات الميزانية
-            </button>
+            </button> */}
           </div>
 
           {/* Profile Tab */}
@@ -432,42 +510,6 @@ function Settings() {
                   {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
                 </button>
               </form>
-
-              {/* معلومات الحساب والإجراءات السريعة */}
-              {/* <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                <div className="bg-[#18181b] rounded-2xl p-6 shadow">
-                  <h3 className="text-lg font-semibold text-white mb-4">معلومات الحساب</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">تاريخ الإنشاء:</span>
-                      <span className="text-white">{user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('ar-EG') : "غير متوفر"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">آخر تسجيل دخول:</span>
-                      <span className="text-white">{user?.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString('ar-EG') : "غير متوفر"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">حالة الحساب:</span>
-                      <span className="text-green-400">نشط</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-[#18181b] rounded-2xl p-6 shadow">
-                  <h3 className="text-lg font-semibold text-white mb-4">إجراءات سريعة</h3>
-                  <div className="space-y-3">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full bg-red-500 text-white font-semibold text-sm p-3 rounded-lg border-none cursor-pointer transition hover:bg-red-600"
-                    >
-                      تسجيل الخروج
-                    </button>
-                    <button className="w-full bg-orange-500 text-white font-semibold text-sm p-3 rounded-lg border-none cursor-pointer transition hover:bg-orange-600">
-                      حذف الحساب
-                    </button>
-                  </div>
-                </div>
-              </div> */}
             </div>
           )}
 
@@ -607,7 +649,93 @@ function Settings() {
           {activeTab === "notifications" && (
             <div className="bg-[#18181b] rounded-2xl p-6 shadow">
               <h3 className="text-lg font-semibold text-white mb-4">إعدادات الإشعارات</h3>
+
+              {/* حالة الإشعارات */}
+              <div className="mb-6 p-4 bg-[#0f0f0f] rounded-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-white font-medium">حالة الإشعارات</h4>
+                    <p className="text-gray-400 text-sm">
+                      {notificationStatus === "granted" && "الإشعارات مفعلة"}
+                      {notificationStatus === "denied" && "الإشعارات مرفوضة"}
+                      {notificationStatus === "default" && "لم يتم طلب إذن الإشعارات"}
+                      {notificationStatus === "not-supported" && "المتصفح لا يدعم الإشعارات"}
+                    </p>
+                  </div>
+                  <div className={`px-3 py-1 rounded-full text-sm ${notificationStatus === "granted" ? "bg-green-500/20 text-green-400" :
+                    notificationStatus === "denied" ? "bg-red-500/20 text-red-400" :
+                      "bg-yellow-500/20 text-yellow-400"
+                    }`}>
+                    {notificationStatus === "granted" && "مفعلة"}
+                    {notificationStatus === "denied" && "مرفوضة"}
+                    {notificationStatus === "default" && "غير مفعلة"}
+                    {notificationStatus === "not-supported" && "غير مدعومة"}
+                  </div>
+                </div>
+
+                {notificationStatus === "default" && (
+                  <button
+                    onClick={handleRequestNotificationPermission}
+                    className="w-full bg-teal-500 text-white font-semibold p-3 rounded-lg hover:bg-teal-600 transition"
+                  >
+                    تفعيل الإشعارات
+                  </button>
+                )}
+
+                {notificationStatus === "denied" && (
+                  <div className="text-yellow-400 text-sm">
+                    <p>لتفعيل الإشعارات، اذهب إلى إعدادات المتصفح واسمح بالإشعارات لهذا الموقع.</p>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-4">
+                <h4 className="text-white font-medium mb-3">تنبيهات الميزانية</h4>
+
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">تنبيه 50% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 50% من ميزانيتك</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budgetThresholds["50"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.50', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">تنبيه 80% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 80% من ميزانيتك</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budgetThresholds["80"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.80', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">تنبيه 100% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 100% من ميزانيتك</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budgetThresholds["100"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.100', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
+                  />
+                </div>
+
+                <h4 className="text-white font-medium mb-3 mt-6">إشعارات أخرى</h4>
+
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
                     <h4 className="text-white font-medium">إشعارات العمليات</h4>
@@ -616,10 +744,12 @@ function Settings() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-teal-500"
-                    checked={notifications.transactions}
-                    onChange={() => handleNotificationChange('transactions')}
+                    checked={notifications.transactionAlerts}
+                    onChange={(e) => handleNotificationChange('transactionAlerts', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
                   />
                 </div>
+
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
                     <h4 className="text-white font-medium">التقرير الأسبوعي</h4>
@@ -629,7 +759,22 @@ function Settings() {
                     type="checkbox"
                     className="w-4 h-4 text-teal-500"
                     checked={notifications.weeklyReport}
-                    onChange={() => handleNotificationChange('weeklyReport')}
+                    onChange={(e) => handleNotificationChange('weeklyReport', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">تذكير بداية الشهر</h4>
+                    <p className="text-gray-400 text-sm">تذكير لإعداد ميزانية الشهر الجديد</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.monthlyReminder}
+                    onChange={(e) => handleNotificationChange('monthlyReminder', e.target.checked)}
+                    disabled={notificationStatus !== "granted"}
                   />
                 </div>
               </div>
@@ -638,7 +783,10 @@ function Settings() {
 
           {/* Appearance Tab */}
           {activeTab === "appearance" && (
-            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow relative opacity-60 pointer-events-none">
+              <span className="absolute top-3 left-3 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                قريبًا
+              </span>
               <h3 className="text-lg font-semibold text-white mb-4">إعدادات المظهر</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
@@ -646,14 +794,18 @@ function Settings() {
                     <h4 className="text-white font-medium">الوضع المظلم</h4>
                     <p className="text-gray-400 text-sm">تفعيل المظهر المظلم</p>
                   </div>
-                  <input type="checkbox" className="w-4 h-4 text-teal-500" defaultChecked />
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    disabled
+                  />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
                     <h4 className="text-white font-medium">حجم الخط</h4>
                     <p className="text-gray-400 text-sm">تخصيص حجم النصوص</p>
                   </div>
-                  <select className="bg-[#232323] text-white px-3 py-2 rounded-lg text-sm">
+                  <select className="bg-[#232323] text-white px-3 py-2 rounded-lg text-sm" disabled>
                     <option>صغير</option>
                     <option selected>متوسط</option>
                     <option>كبير</option>
@@ -661,10 +813,11 @@ function Settings() {
                 </div>
               </div>
             </div>
+
           )}
 
           {/* Budget Settings Tab */}
-          {activeTab === "budget" && (
+          {/* {activeTab === "budget" && (
             <div className="bg-[#18181b] rounded-2xl p-6 shadow">
               <h3 className="text-lg font-semibold text-white mb-4">إعدادات إشعارات الميزانية</h3>
               <div className="space-y-4">
@@ -676,8 +829,8 @@ function Settings() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-teal-500"
-                    checked={notifications.budget50}
-                    onChange={() => handleNotificationChange('budget50')}
+                    checked={notifications.budgetThresholds["50"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.50', e.target.checked)}
                   />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
@@ -688,8 +841,8 @@ function Settings() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-teal-500"
-                    checked={notifications.budget80}
-                    onChange={() => handleNotificationChange('budget80')}
+                    checked={notifications.budgetThresholds["80"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.80', e.target.checked)}
                   />
                 </div>
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
@@ -700,8 +853,8 @@ function Settings() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-teal-500"
-                    checked={notifications.budget100}
-                    onChange={() => handleNotificationChange('budget100')}
+                    checked={notifications.budgetThresholds["100"]}
+                    onChange={(e) => handleNotificationChange('budgetThresholds.100', e.target.checked)}
                   />
                 </div>
                 <div className="mt-6">
@@ -715,7 +868,7 @@ function Settings() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </main>
     </div>

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { addTransaction } from "../services/transactionsService";
 import useAuth from "../hooks/useAuth";
 import { getExpenseCategories, getIncomeCategories, addIncomeCategory, initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
+import { useNotifications } from "../hooks/useNotifications";
 
 function AddTransaction() {
   const { user } = useAuth();
+  const { sendTransactionAlertNotification } = useNotifications(user?.uid);
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [incomeCategories, setIncomeCategories] = useState([]);
   const [form, setForm] = useState({
@@ -117,6 +119,14 @@ function AddTransaction() {
         amount: Number(form.amount),
         userId: user.uid,
         date: new Date(form.date).toISOString()
+      });
+
+      // إرسال إشعار المعاملة الجديدة
+      await sendTransactionAlertNotification({
+        amount: Number(form.amount),
+        category: finalCategory,
+        type: form.type,
+        note: form.note
       });
 
       setForm({

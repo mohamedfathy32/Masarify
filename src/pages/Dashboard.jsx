@@ -2,12 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { signOut } from "firebase/auth";
-import {  getTransactionsByUser } from "../services/transactionsService";
+import { getTransactionsByUser } from "../services/transactionsService";
 import { getMonthlyBudget, setMonthlyBudget } from "../services/budgetService";
-import { getExpenseCategories, getIncomeCategories, initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
+import { initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
+import { useNotifications } from "../hooks/useNotifications";
+import { getUnreadNotificationsCount } from "../services/notificationService";
 import { format, getMonth, getYear, subMonths, parseISO, endOfMonth, differenceInCalendarDays } from "date-fns";
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
+import { HiOutlineBell } from "react-icons/hi";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 
@@ -21,17 +24,17 @@ function getMonthStats(transactions, month, year) {
   const expense = txs.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
   const balance = income - expense;
   const savingRate = income > 0 ? ((balance / income) * 100).toFixed(1) : 0;
-  
+
   // أكثر فئة صرف
   const expenseByCat = txs.filter(t => t.type === "expense").reduce((acc, t) => {
     acc[t.category] = (acc[t.category] || 0) + Number(t.amount);
     return acc;
   }, {});
   const topCategory = Object.entries(expenseByCat).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
-  
+
   // أكبر عملية
   const biggest = txs.sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))[0];
-  
+
   return {
     income,
     expense,
@@ -105,6 +108,8 @@ function Dashboard() {
   const [budgetAmount, setBudgetAmount] = useState("");
   const [showBudgetForm, setShowBudgetForm] = useState(false);
   const [budgetLoading, setBudgetLoading] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const { showNotification, sendBudgetAlert } = useNotifications(user?.uid);
 
 
 
@@ -113,24 +118,24 @@ function Dashboard() {
   useEffect(() => {
     if (!user) return;
     setLoading(true);
-    
+
     const loadData = async () => {
       try {
         // تهيئة التصنيفات الافتراضية
         await initializeDefaultExpenseCategories(user.uid);
         await initializeDefaultIncomeCategories(user.uid);
-        
-        // جلب البيانات
-        const [txs] = await Promise.all([
-          getTransactionsByUser(user.uid),
-          getExpenseCategories(user.uid),
-          getIncomeCategories(user.uid)
-        ]);
-        
-        setTransactions(txs);
-        
 
-        
+        // جلب البيانات
+        const [txs, unreadCount] = await Promise.all([
+          getTransactionsByUser(user.uid),
+          getUnreadNotificationsCount(user.uid)
+        ]);
+
+        setTransactions(txs);
+        setUnreadNotifications(unreadCount);
+
+
+
         // جلب ميزانية الشهر الحالي
         const now = new Date();
         const month = getMonth(now);
@@ -146,9 +151,32 @@ function Dashboard() {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, [user]);
+
+  // مراقبة الميزانية وإرسال الإشعارات
+  useEffect(() => {
+    if (!currentBudget || !user) return;
+
+    const currentStats = getMonthStats(transactions, getMonth(new Date()), getYear(new Date()));
+    const spentPercentage = ((currentStats.expense / currentBudget.amount) * 100).toFixed(1);
+
+    // إرسال إشعارات عند الوصول للنسب المحددة
+    const checkAndSendNotifications = async () => {
+      const percentage = Number(spentPercentage);
+
+      if (percentage >= 50 && percentage < 51) {
+        await sendBudgetAlert(50, currentStats.expense, currentBudget.amount);
+      } else if (percentage >= 80 && percentage < 81) {
+        await sendBudgetAlert(80, currentStats.expense, currentBudget.amount);
+      } else if (percentage >= 100 && percentage < 101) {
+        await sendBudgetAlert(100, currentStats.expense, currentBudget.amount);
+      }
+    };
+
+    checkAndSendNotifications();
+  }, [transactions, currentBudget, user, sendBudgetAlert]);
 
   // حسابات الشهر الحالي والسابق
   const now = new Date();
@@ -210,7 +238,7 @@ function Dashboard() {
     datasets: [{
       data: Object.values(currentStats.expenseByCat),
       backgroundColor: [
-        "#ef4444", "#f97316", "#eab308", "#22c55e", 
+        "#ef4444", "#f97316", "#eab308", "#22c55e",
         "#06b6d4", "#8b5cf6", "#ec4899", "#84cc16"
       ],
       borderWidth: 0,
@@ -244,15 +272,17 @@ function Dashboard() {
   const handleBudgetSubmit = async (e) => {
     e.preventDefault();
     if (!budgetAmount || isNaN(budgetAmount) || Number(budgetAmount) <= 0) return;
-    
+
     setBudgetLoading(true);
     try {
       await setMonthlyBudget(user.uid, month, year, Number(budgetAmount));
       const budget = await getMonthlyBudget(user.uid, month, year);
       setCurrentBudget(budget);
       setShowBudgetForm(false);
+      showNotification("تم حفظ الميزانية بنجاح", "success");
     } catch (error) {
       console.error("خطأ في حفظ الميزانية:", error);
+      showNotification("فشل حفظ الميزانية، يرجى المحاولة مرة أخرى لاحقًا", "error");
     } finally {
       setBudgetLoading(false);
     }
@@ -270,29 +300,48 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-4">
-          <div className="relative">
+      <div className="flex justify-between items-center mb-8 gap-0.5">
+        <div className="flex flex-col">
+
+          <div className="flex items-center gap-2">
+            {/* صورة المستخدم */}
             <img
               src={user?.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"}
               alt="صورة المستخدم"
-              className={`w-12 h-12 rounded-full object-cover border-2 cursor-pointer hover:opacity-80 transition border-teal-500 ${user?.photoURL?'':'bg-gray-200 p-1'}`}
+              className={`md:w-12 md:h-12 w-8 h-8 rounded-full object-cover border-2 border-teal-500 cursor-pointer hover:opacity-80 transition ${user?.photoURL ? '' : 'bg-gray-200 p-1'}`}
               onClick={() => navigate('/settings')}
             />
-          </div>
-          <div>
+
+            {/* النصوص */}
             <h1 className="text-2xl sm:text-3xl font-bold text-white">
-              مرحبًا {user?.displayName || user?.email || "مستخدم"} 
+              مرحبًا {user?.displayName || user?.email || "مستخدم"}
             </h1>
-            <p className="text-gray-400 mt-1">لوحة التحكم - {format(now, "MMMM yyyy", { locale: undefined })}</p>
           </div>
+          <p className="text-gray-400 text-sm mt-1">
+            لوحة التحكم - {format(now, "MMMM yyyy", { locale: undefined })}
+          </p>
         </div>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 text-white font-semibold px-4 py-2 rounded-lg hover:bg-red-600 transition"
-        >
-          تسجيل الخروج
-        </button>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate('/notifications')}
+            className="relative bg-[#18181b] text-white p-3 rounded-lg hover:bg-[#232323] transition border border-[#222]"
+          >
+
+            <HiOutlineBell size={22} />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                {unreadNotifications > 99 ? '99+' : unreadNotifications}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white font-semibold px-2 py-2 rounded-lg hover:bg-red-600 transition"
+          >
+            تسجيل الخروج
+          </button>
+        </div>
       </div>
 
       {/* الميزانية الشهرية - كارد كبير */}
@@ -391,7 +440,7 @@ function Dashboard() {
               <span>{budgetStatus.spentPercent}%</span>
             </div>
             <div className="w-full bg-white/20 rounded-full h-3">
-              <div 
+              <div
                 className={`h-3 rounded-full ${budgetStatus.progressColor} transition-all duration-500`}
                 style={{ width: `${Math.min(budgetStatus.spentPercent, 100)}%` }}
               ></div>
