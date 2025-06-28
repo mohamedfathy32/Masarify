@@ -49,7 +49,7 @@ function DashboardSidebar() {
       )}
 
       {/* Sidebar */}
-      <aside className={`bg-[#18181b] min-h-screen py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 h-full z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <aside className={`bg-[#18181b] min-h-screen py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 h-screen z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Masarify Logo/Link */}
         <Link 
           to="/" 

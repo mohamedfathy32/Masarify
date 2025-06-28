@@ -1,7 +1,7 @@
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "../firebase";
 
-const defaultCategories = [
+const defaultExpenseCategories = [
   "أكل وشرب",
   "مواصلات", 
   "تسوق",
@@ -11,23 +11,68 @@ const defaultCategories = [
   "تعليم"
 ];
 
-export async function getCategories(userId) {
-  const q = query(collection(db, "users", userId, "categories"));
+const defaultIncomeCategories = [
+  "راتب",
+  "عمل إضافي",
+  "استثمارات",
+  "هدايا",
+  "أخرى"
+];
+
+// دوال تصنيفات المصروفات
+export async function getExpenseCategories(userId) {
+  const q = query(collection(db, "users", userId, "expenseCategories"));
   const snap = await getDocs(q);
   return snap.docs.map(doc => doc.data().name);
 }
 
+export async function addExpenseCategory(userId, name) {
+  return addDoc(collection(db, "users", userId, "expenseCategories"), { name });
+}
+
+export async function initializeDefaultExpenseCategories(userId) {
+  const existingCategories = await getExpenseCategories(userId);
+  
+  // إضافة التصنيفات الافتراضية إذا لم تكن موجودة
+  for (const category of defaultExpenseCategories) {
+    if (!existingCategories.includes(category)) {
+      await addExpenseCategory(userId, category);
+    }
+  }
+}
+
+// دوال تصنيفات الدخل
+export async function getIncomeCategories(userId) {
+  const q = query(collection(db, "users", userId, "incomeCategories"));
+  const snap = await getDocs(q);
+  return snap.docs.map(doc => doc.data().name);
+}
+
+export async function addIncomeCategory(userId, name) {
+  return addDoc(collection(db, "users", userId, "incomeCategories"), { name });
+}
+
+export async function initializeDefaultIncomeCategories(userId) {
+  const existingCategories = await getIncomeCategories(userId);
+  
+  // إضافة التصنيفات الافتراضية إذا لم تكن موجودة
+  for (const category of defaultIncomeCategories) {
+    if (!existingCategories.includes(category)) {
+      await addIncomeCategory(userId, category);
+    }
+  }
+}
+
+// دوال للتوافق مع الكود القديم
+export async function getCategories(userId) {
+  return getExpenseCategories(userId);
+}
+
 export async function addCategory(userId, name) {
-  return addDoc(collection(db, "users", userId, "categories"), { name });
+  return addExpenseCategory(userId, name);
 }
 
 export async function initializeDefaultCategories(userId) {
-  const existingCategories = await getCategories(userId);
-  
-  // إضافة التصنيفات الافتراضية إذا لم تكن موجودة
-  for (const category of defaultCategories) {
-    if (!existingCategories.includes(category)) {
-      await addCategory(userId, category);
-    }
-  }
+  await initializeDefaultExpenseCategories(userId);
+  await initializeDefaultIncomeCategories(userId);
 } 

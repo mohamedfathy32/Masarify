@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
-import { signOut, updateProfile } from "firebase/auth";
+import { updateProfile, updatePassword } from "firebase/auth";
 import useAuth from "../hooks/useAuth";
 import { saveUserProfile, getUserProfile } from "../services/userService";
 import Swal from "sweetalert2";
-
 
 function Settings() {
   const { user } = useAuth();
@@ -21,8 +19,36 @@ function Settings() {
   const [error, setError] = useState("");
   const [imgUploading, setImgUploading] = useState(false);
   const [imgPreview, setImgPreview] = useState("");
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("profile");
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  });
+  const [notifications, setNotifications] = useState({
+    budget50: true,
+    budget80: true,
+    budget100: true,
+    transactions: true,
+    weeklyReport: false
+  });
   const fileInputRef = useRef();
+
+  // صورة افتراضية للمستخدم
+  const defaultAvatar = (
+    <div className="w-32 h-32 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center border-4 border-white/20 shadow-lg">
+      <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    </div>
+  );
 
   useEffect(() => {
     if (!user) return;
@@ -34,26 +60,96 @@ function Settings() {
         name: user.displayName || profile.name || "",
         photoURL: user.photoURL || profile.photoURL || ""
       }));
-      setImgPreview(user.photoURL || profile.photoURL || "");
+      setImgPreview(user.photoURL || profile.photoURL);
+      // تحميل إعدادات الإشعارات
+      if (profile.notifications) {
+        setNotifications(profile.notifications);
+      }
     });
   }, [user]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
-  };
+
 
   const handleChange = e => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
   };
 
+  const handlePasswordChange = e => {
+    setPasswordForm(f => ({ ...f, [e.target.name]: e.target.value }));
+  };
+
+  const handleNotificationChange = (key) => {
+    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // دالة لضغط الصورة
+  const compressImage = (file, maxWidth = 800, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        // حساب الأبعاد الجديدة مع الحفاظ على النسبة
+        let { width, height } = img;
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        // رسم الصورة المضغوطة
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // تحويل إلى Blob
+        canvas.toBlob(resolve, 'image/jpeg', quality);
+      };
+
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleImgChange = async e => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // التحقق من نوع الملف
+    if (!file.type.startsWith('image/')) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "يرجى اختيار ملف صورة صحيح.",
+        confirmButtonText: "حسنًا"
+      });
+      return;
+    }
+
+    // التحقق من حجم الملف (15MB = 15 * 1024 * 1024 bytes)
+    const maxSize = 15 * 1024 * 1024; // 15MB
+    if (file.size > maxSize) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "حجم الصورة يجب أن يكون أقل من 15 ميجابايت.",
+        confirmButtonText: "حسنًا"
+      });
+      return;
+    }
+
     setImgUploading(true);
+    setError("");
+
     try {
+      // ضغط الصورة إذا كانت كبيرة
+      let processedFile = file;
+      if (file.size > 2 * 1024 * 1024) { // إذا كانت أكبر من 2MB
+        processedFile = await compressImage(file);
+      }
+
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", processedFile);
       formData.append("upload_preset", "test cloudinary");
       formData.append("cloud_name", "dhta28b63");
 
@@ -61,12 +157,25 @@ function Settings() {
         method: "POST",
         body: formData
       });
+
+      if (!res.ok) {
+        throw new Error('فشل في رفع الصورة');
+      }
+
       const data = await res.json();
       const imageUrl = data.secure_url;
       setForm(f => ({ ...f, photoURL: imageUrl }));
       setImgPreview(imageUrl);
-    } catch {
+
+    } catch (error) {
+      console.error('خطأ في رفع الصورة:', error);
       setError("حدث خطأ أثناء رفع الصورة");
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "حدث خطأ أثناء رفع الصورة. حاول مرة أخرى.",
+        confirmButtonText: "حسنًا"
+      });
     } finally {
       setImgUploading(false);
     }
@@ -82,7 +191,8 @@ function Settings() {
       phone: form.phone || "",
       bio: form.bio || "",
       city: form.city || "",
-      photoURL: form.photoURL || ""
+      photoURL: form.photoURL || "",
+      notifications: notifications
     };
     console.log("بيانات الحفظ:", dataToSave, "uid المستخدم:", user?.uid);
     try {
@@ -108,87 +218,505 @@ function Settings() {
     }
   };
 
+  const handlePasswordUpdate = async e => {
+    e.preventDefault();
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "كلمة المرور الجديدة غير متطابقة.",
+        confirmButtonText: "حسنًا"
+      });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+        confirmButtonText: "حسنًا"
+      });
+      return;
+    }
+
+    setPasswordLoading(true);
+    try {
+      await updatePassword(auth.currentUser, passwordForm.newPassword);
+      setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setShowPasswordForm(false);
+      Swal.fire({
+        icon: "success",
+        title: "تم التحديث!",
+        text: "تم تغيير كلمة المرور بنجاح.",
+        confirmButtonText: "حسنًا"
+      });
+    } catch (error) {
+      console.error(error);
+      Swal.fire({
+        icon: "error",
+        title: "خطأ!",
+        text: "حدث خطأ أثناء تغيير كلمة المرور. تأكد من كلمة المرور الحالية.",
+        confirmButtonText: "حسنًا"
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
-      <main className="flex-1 p-4 sm:p-6 lg:p-8 text-center">
-        <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">الإعدادات الشخصية</h2>
-        <form onSubmit={handleSave} className="bg-[#18181b] rounded-2xl p-4 sm:p-6 shadow space-y-4 mb-6 sm:mb-8 text-right max-w-md mx-auto">
-          <div className="flex flex-col items-center mb-4">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 mb-2">
-              <img
-                src={imgPreview || "/default-avatar.png"}
-                alt="صورة البروفايل"
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-teal-500"
-              />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current.click()}
-                className="absolute bottom-0 left-0 bg-teal-500 text-white rounded-full p-1 text-xs shadow hover:bg-teal-600"
-                disabled={imgUploading}
-              >
-                {imgUploading ? "..." : "تغيير"}
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                ref={fileInputRef}
-                onChange={handleImgChange}
-              />
-            </div>
+      <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">الإعدادات الشخصية</h2>
+
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2 mb-6 justify-center">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "profile"
+                ? "bg-teal-500 text-white"
+                : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
+                }`}
+            >
+              الملف الشخصي
+            </button>
+            <button
+              onClick={() => setActiveTab("security")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "security"
+                ? "bg-teal-500 text-white"
+                : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
+                }`}
+            >
+              الأمان
+            </button>
+            <button
+              onClick={() => setActiveTab("notifications")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "notifications"
+                ? "bg-teal-500 text-white"
+                : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
+                }`}
+            >
+              الإشعارات
+            </button>
+            <button
+              onClick={() => setActiveTab("appearance")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "appearance"
+                ? "bg-teal-500 text-white"
+                : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
+                }`}
+            >
+              المظهر
+            </button>
+            <button
+              onClick={() => setActiveTab("budget")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "budget"
+                ? "bg-teal-500 text-white"
+                : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
+                }`}
+            >
+              إعدادات الميزانية
+            </button>
           </div>
-          <label className="block text-gray-300 mb-1 text-sm sm:text-base">الاسم</label>
-          <input
-            type="text"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-            className="w-full p-2 sm:p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm sm:text-base focus:outline-none focus:border-teal-500"
-            maxLength={40}
-          />
-          <label className="block text-gray-300 mb-1 text-sm sm:text-base">البريد الإلكتروني</label>
-          <input
-            type="email"
-            value={user?.email || ""}
-            disabled
-            className="w-full p-2 sm:p-3 rounded-lg border border-[#222] bg-[#232323] text-gray-400 text-sm sm:text-base"
-          />
-          <label className="block text-gray-300 mb-1 text-sm sm:text-base">رقم الهاتف</label>
-          <input
-            type="text"
-            name="phone"
-            value={form.phone}
-            onChange={handleChange}
-            className="w-full p-2 sm:p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm sm:text-base focus:outline-none focus:border-teal-500"
-            maxLength={20}
-          />
-          <label className="block text-gray-300 mb-1 text-sm sm:text-base">المدينة</label>
-          <input
-            type="text"
-            name="city"
-            value={form.city}
-            onChange={handleChange}
-            className="w-full p-2 sm:p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm sm:text-base focus:outline-none focus:border-teal-500"
-            maxLength={30}
-          />
-          <label className="block text-gray-300 mb-1 text-sm sm:text-base">نبذة عنك</label>
-          <textarea
-            name="bio"
-            value={form.bio}
-            onChange={handleChange}
-            className="w-full p-2 sm:p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm sm:text-base focus:outline-none focus:border-teal-500"
-            maxLength={200}
-            rows={3}
-          />
-          {success && <div className="text-green-500 text-sm">تم حفظ البيانات بنجاح!</div>}
-          {error && <div className="text-red-500 text-sm">{error}</div>}
-          <button type="submit" className="w-full bg-teal-500 text-white font-semibold text-base sm:text-lg p-3 sm:p-4 rounded-lg border-none mt-2 cursor-pointer transition hover:bg-teal-600 disabled:opacity-60" disabled={loading}>
-            {loading ? "...جاري الحفظ" : "حفظ التغييرات"}
-          </button>
-        </form>
-        <button onClick={handleLogout} className="w-full bg-red-500 text-white font-semibold text-base sm:text-lg p-3 sm:p-4 rounded-lg border-none mt-2 cursor-pointer transition hover:bg-red-600 max-w-md mx-auto">
-          تسجيل الخروج
-        </button>
+
+          {/* Profile Tab */}
+          {activeTab === "profile" && (
+            <div className="w-full">
+              <form onSubmit={handleSave} className="bg-[#18181b] rounded-2xl p-6 shadow space-y-4 max-w-2xl mx-auto">
+                <h3 className="text-lg font-semibold text-white mb-4 text-center">البيانات الشخصية</h3>
+
+                <div className="flex flex-col items-center mb-6">
+                  <div className="relative w-32 h-32 mb-4 cursor-pointer" onClick={() => fileInputRef.current.click()}>
+                    {imgPreview ? (
+                      <img
+                        src={imgPreview}
+                        alt="صورة البروفايل"
+                        className="w-32 h-32 rounded-full object-cover border-4 border-teal-500 shadow-lg hover:opacity-80 transition"
+                      />
+                    ) : (
+                      defaultAvatar
+                    )}
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition">
+                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleImgChange}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-gray-300 text-sm mb-2">انقر على الصورة لتغييرها</p>
+                    <p className="text-gray-400 text-xs mb-2">الحجم الأقصى: 15 ميجابايت</p>
+                    {imgUploading && (
+                      <div className="text-cyan-400 text-sm">جاري رفع الصورة...</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-300 mb-2 text-sm">الاسم</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={form.name}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                      maxLength={40}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-300 mb-2 text-sm">رقم الهاتف</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      value={form.phone}
+                      onChange={handleChange}
+                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                      maxLength={20}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 mb-2 text-sm">البريد الإلكتروني</label>
+                  <input
+                    type="email"
+                    value={user?.email || ""}
+                    disabled
+                    className="w-full p-3 rounded-lg border border-[#222] bg-[#232323] text-gray-400 text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 mb-2 text-sm">المدينة</label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                    maxLength={30}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-gray-300 mb-2 text-sm">نبذة عنك</label>
+                  <textarea
+                    name="bio"
+                    value={form.bio}
+                    onChange={handleChange}
+                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                    maxLength={200}
+                    rows={3}
+                  />
+                </div>
+
+                {success && <div className="text-green-500 text-sm text-center">تم حفظ البيانات بنجاح!</div>}
+                {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+
+                <button
+                  type="submit"
+                  className="w-full bg-teal-500 text-white font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={loading || imgUploading}
+                >
+                  {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
+                </button>
+              </form>
+
+              {/* معلومات الحساب والإجراءات السريعة */}
+              {/* <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+                <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+                  <h3 className="text-lg font-semibold text-white mb-4">معلومات الحساب</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">تاريخ الإنشاء:</span>
+                      <span className="text-white">{user?.metadata?.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('ar-EG') : "غير متوفر"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">آخر تسجيل دخول:</span>
+                      <span className="text-white">{user?.metadata?.lastSignInTime ? new Date(user.metadata.lastSignInTime).toLocaleDateString('ar-EG') : "غير متوفر"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">حالة الحساب:</span>
+                      <span className="text-green-400">نشط</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+                  <h3 className="text-lg font-semibold text-white mb-4">إجراءات سريعة</h3>
+                  <div className="space-y-3">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full bg-red-500 text-white font-semibold text-sm p-3 rounded-lg border-none cursor-pointer transition hover:bg-red-600"
+                    >
+                      تسجيل الخروج
+                    </button>
+                    <button className="w-full bg-orange-500 text-white font-semibold text-sm p-3 rounded-lg border-none cursor-pointer transition hover:bg-orange-600">
+                      حذف الحساب
+                    </button>
+                  </div>
+                </div>
+              </div> */}
+            </div>
+          )}
+
+          {/* Security Tab */}
+          {activeTab === "security" && (
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+              <h3 className="text-lg font-semibold text-white mb-4">إعدادات الأمان</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">تغيير كلمة المرور</h4>
+                    <p className="text-gray-400 text-sm">قم بتحديث كلمة المرور الخاصة بك</p>
+                  </div>
+                  <button
+                    onClick={() => setShowPasswordForm(!showPasswordForm)}
+                    className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition"
+                  >
+                    تغيير
+                  </button>
+                </div>
+
+                {showPasswordForm && (
+                  <form onSubmit={handlePasswordUpdate} className="bg-[#0f0f0f] rounded-lg p-4 space-y-4">
+                    <div>
+                      <label className="block text-gray-300 mb-2 text-sm">كلمة المرور الحالية</label>
+                      <div className="relative">
+                        <input
+                          type={showPasswords.current ? "text" : "password"}
+                          name="currentPassword"
+                          value={passwordForm.currentPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('current')}
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          {showPasswords.current ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-300 mb-2 text-sm">كلمة المرور الجديدة</label>
+                      <div className="relative">
+                        <input
+                          type={showPasswords.new ? "text" : "password"}
+                          name="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('new')}
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          {showPasswords.new ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-gray-300 mb-2 text-sm">تأكيد كلمة المرور الجديدة</label>
+                      <div className="relative">
+                        <input
+                          type={showPasswords.confirm ? "text" : "password"}
+                          name="confirmPassword"
+                          value={passwordForm.confirmPassword}
+                          onChange={handlePasswordChange}
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('confirm')}
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                        >
+                          {showPasswords.confirm ? (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                              <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" />
+                              <path d="M12.454 16.697L9.75 13.992a4 4 0 01-3.742-3.741L2.335 6.578A9.98 9.98 0 00.458 10c1.274 4.057 5.065 7 9.542 7 .847 0 1.669-.105 2.454-.303z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="submit"
+                        className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition disabled:opacity-60"
+                        disabled={passwordLoading}
+                      >
+                        {passwordLoading ? "جاري التحديث..." : "تحديث كلمة المرور"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowPasswordForm(false)}
+                        className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition"
+                      >
+                        إلغاء
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Notifications Tab */}
+          {activeTab === "notifications" && (
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+              <h3 className="text-lg font-semibold text-white mb-4">إعدادات الإشعارات</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">إشعارات العمليات</h4>
+                    <p className="text-gray-400 text-sm">إشعارات عند إضافة عمليات جديدة</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.transactions}
+                    onChange={() => handleNotificationChange('transactions')}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">التقرير الأسبوعي</h4>
+                    <p className="text-gray-400 text-sm">تقرير أسبوعي بمصروفاتك</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.weeklyReport}
+                    onChange={() => handleNotificationChange('weeklyReport')}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Appearance Tab */}
+          {activeTab === "appearance" && (
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+              <h3 className="text-lg font-semibold text-white mb-4">إعدادات المظهر</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">الوضع المظلم</h4>
+                    <p className="text-gray-400 text-sm">تفعيل المظهر المظلم</p>
+                  </div>
+                  <input type="checkbox" className="w-4 h-4 text-teal-500" defaultChecked />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">حجم الخط</h4>
+                    <p className="text-gray-400 text-sm">تخصيص حجم النصوص</p>
+                  </div>
+                  <select className="bg-[#232323] text-white px-3 py-2 rounded-lg text-sm">
+                    <option>صغير</option>
+                    <option selected>متوسط</option>
+                    <option>كبير</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Budget Settings Tab */}
+          {activeTab === "budget" && (
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+              <h3 className="text-lg font-semibold text-white mb-4">إعدادات إشعارات الميزانية</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">إشعار عند 50% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">تنبيه عند إنفاق نصف الميزانية</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budget50}
+                    onChange={() => handleNotificationChange('budget50')}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">إشعار عند 80% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">تنبيه عند اقتراب تجاوز الميزانية</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budget80}
+                    onChange={() => handleNotificationChange('budget80')}
+                  />
+                </div>
+                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                  <div>
+                    <h4 className="text-white font-medium">إشعار عند 100% من الميزانية</h4>
+                    <p className="text-gray-400 text-sm">تنبيه عند تجاوز الميزانية</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-teal-500"
+                    checked={notifications.budget100}
+                    onChange={() => handleNotificationChange('budget100')}
+                  />
+                </div>
+                <div className="mt-6">
+                  <button
+                    onClick={handleSave}
+                    className="w-full bg-teal-500 text-white font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60"
+                    disabled={loading}
+                  >
+                    {loading ? "جاري الحفظ..." : "حفظ إعدادات الإشعارات"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );

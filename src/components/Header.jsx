@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { HiMenu, HiX } from "react-icons/hi";
@@ -13,6 +13,7 @@ const publicLinks = [
 
 function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -60,12 +61,22 @@ function Header() {
           {/* Left: Dashboard or Login */}
           <div className="order-3 flex items-center gap-2">
             {user ? (
-              <Link
-                to="/dashboard"
-                className={`px-3 py-1.5 rounded-md font-bold text-sm sm:text-base border-2 border-teal-500 text-white bg-[#0f0f0f] hover:bg-teal-500 hover:text-white transition-colors duration-200 shadow-sm ${location.pathname === "/dashboard" ? 'bg-teal-500 text-white' : ''}`}
-              >
-                لوحة التحكم
-              </Link>
+              <>
+                <div className="flex items-center gap-3">
+                  <img
+                    src={user?.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"}
+                    alt="صورة المستخدم"
+                    className={`w-8 h-8 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition ${user?.photoURL?'':'bg-gray-200 p-1'}`}
+                    onClick={() => navigate('/settings')}
+                  />
+                  <Link
+                    to="/dashboard"
+                    className={`px-3 py-1.5 rounded-md font-bold text-sm sm:text-base border-2 border-teal-500 text-white bg-[#0f0f0f] hover:bg-teal-500 hover:text-white transition-colors duration-200 shadow-sm ${location.pathname === "/dashboard" ? 'bg-teal-500 text-white' : ''}`}
+                  >
+                    لوحة التحكم
+                  </Link>
+                </div>
+              </>
             ) : (
               <Link
                 to="/login"
@@ -108,6 +119,25 @@ function Header() {
               </div>
               <div className="flex-1 p-4">
                 <ul className="space-y-2">
+                  {user && (
+                    <li className="mb-4 p-3 bg-[#232323] rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={user?.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"}
+                          alt="صورة المستخدم"
+                          className="w-10 h-10 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition bg-gradient-to-br from-teal-500 to-cyan-600 p-1"
+                          onClick={() => {
+                            navigate('/settings');
+                            toggleMenu();
+                          }}
+                        />
+                        <div>
+                          <div className="text-white font-medium">{user?.displayName || user?.email}</div>
+                          <div className="text-gray-400 text-sm">مستخدم مسجل</div>
+                        </div>
+                      </div>
+                    </li>
+                  )}
                   {publicLinks.map(link => (
                     <li key={link.to}>
                       <Link

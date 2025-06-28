@@ -7,7 +7,7 @@ import FeaturesPage from "../pages/FeaturesPage";
 import AboutPage from "../pages/AboutPage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
-import DashboardHome from "../pages/DashboardHome";
+import Dashboard from "../pages/Dashboard";
 import AddTransaction from "../pages/AddTransaction";
 import History from "../pages/History";
 import Analytics from "../pages/Analytics";
@@ -52,22 +52,6 @@ function PrivateRoute() {
   return user ? <Outlet /> : <Navigate to="/login" replace />;
 }
 
-// ملخص الرصيد والدخل والمصروفات (يحسبها الراوت الرئيسي ويمررها كـ props)
-function DashboardDataWrapper() {
-  const { user } = useAuth();
-  const [transactions, setTransactions] = useState([]);
-  useEffect(() => {
-    if (!user) return;
-    import("../services/transactionsService").then(({ getTransactionsByUser }) => {
-      getTransactionsByUser(user.uid).then(setTransactions);
-    });
-  }, [user]);
-  const income = transactions.filter(t => t.type === "income").reduce((sum, t) => sum + Number(t.amount), 0);
-  const expense = transactions.filter(t => t.type === "expense").reduce((sum, t) => sum + Number(t.amount), 0);
-  const balance = income - expense;
-  return <DashboardHome income={income} expense={expense} balance={balance} />;
-}
-
 export default function AppRoutes() {
   return (
     <Routes>
@@ -83,7 +67,7 @@ export default function AppRoutes() {
       </Route>
       <Route element={<PrivateRoute />}>
         <Route element={<DashboardLayout />}>
-          <Route path="/dashboard" element={<DashboardDataWrapper />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/add" element={<AddTransaction />} />
           <Route path="/history" element={<History />} />
           <Route path="/analytics" element={<Analytics />} />
