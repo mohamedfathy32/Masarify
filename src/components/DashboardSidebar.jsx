@@ -32,10 +32,10 @@ function DashboardSidebar() {
     };
 
     loadUnreadCount();
-    
+
     // تحديث العداد كل دقيقة
     const interval = setInterval(loadUnreadCount, 60000);
-    
+
     return () => clearInterval(interval);
   }, []);
 
@@ -65,8 +65,8 @@ function DashboardSidebar() {
 
       {/* Mobile Overlay */}
       {isOpen && (
-        <div 
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40" 
+        <div
+          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
           onClick={toggleSidebar}
         />
       )}
@@ -74,14 +74,14 @@ function DashboardSidebar() {
       {/* Sidebar */}
       <aside className={`bg-[#18181b] min-h-screen py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 h-screen z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         {/* Masarify Logo/Link */}
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="text-2xl font-bold text-teal-400 text-center mb-6 hover:text-teal-300 transition-colors no-underline"
           onClick={() => setIsOpen(false)}
         >
           Masarify
         </Link>
-        
+
         <nav className="flex flex-col gap-2 flex-1">
           {links.map(link => (
             <NavLink
@@ -107,11 +107,12 @@ function DashboardSidebar() {
         {/* Logout Button */}
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 text-red-400 hover:bg-red-500/20 hover:text-red-300 mt-auto"
+          className="flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 text-red-400 hover:bg-red-500/20 hover:text-red-300 mt-auto border border-red-500/30"
         >
           <HiOutlineLogout size={22} />
           <span>تسجيل الخروج</span>
         </button>
+
       </aside>
     </>
   );

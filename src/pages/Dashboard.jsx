@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
-import { signOut } from "firebase/auth";
 import { getTransactionsByUser } from "../services/transactionsService";
 import { getMonthlyBudget, setMonthlyBudget } from "../services/budgetService";
 import { initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
@@ -262,13 +261,6 @@ function Dashboard() {
 
   // حالة الميزانية
   const budgetStatus = getBudgetStatus(currentStats, currentBudget?.amount || 0);
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate("/login");
-  };
-
-
   const handleBudgetSubmit = async (e) => {
     e.preventDefault();
     if (!budgetAmount || isNaN(budgetAmount) || Number(budgetAmount) <= 0) return;
@@ -301,7 +293,7 @@ function Dashboard() {
     <div className="min-h-screen bg-[#0f0f0f] p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8 gap-0.5">
-        <div className="flex flex-col">
+        <div className="flex flex-col max-w-[70%]">
 
           <div className="flex items-center gap-2">
             {/* صورة المستخدم */}
@@ -322,26 +314,19 @@ function Dashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/notifications')}
-            className="relative bg-[#18181b] text-white p-3 rounded-lg hover:bg-[#232323] transition border border-[#222]"
-          >
+        <button
+          onClick={() => navigate('/notifications')}
+          className="relative bg-[#18181b] text-white p-3 rounded-lg hover:bg-[#232323] transition border border-[#222]"
+        >
 
-            <HiOutlineBell size={22} />
-            {unreadNotifications > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                {unreadNotifications > 99 ? '99+' : unreadNotifications}
-              </span>
-            )}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white font-semibold px-2 py-2 rounded-lg hover:bg-red-600 transition"
-          >
-            تسجيل الخروج
-          </button>
-        </div>
+          <HiOutlineBell size={22} />
+          {unreadNotifications > 0 && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+              {unreadNotifications > 99 ? '99+' : unreadNotifications}
+            </span>
+          )}
+        </button>
+
       </div>
 
       {/* الميزانية الشهرية - كارد كبير */}
@@ -537,38 +522,63 @@ function Dashboard() {
         {transactions.length === 0 ? (
           <div className="text-gray-400 text-center py-8">لا توجد عمليات بعد.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm text-right">
-              <thead>
-                <tr className="text-gray-300 border-b border-[#222]">
-                  <th className="py-3 px-3">المبلغ</th>
-                  <th className="py-3 px-3">النوع</th>
-                  <th className="py-3 px-3 hidden sm:table-cell">التصنيف</th>
-                  <th className="py-3 px-3">التاريخ</th>
-                  <th className="py-3 px-3 hidden lg:table-cell">ملاحظة</th>
-                </tr>
-              </thead>
-              <tbody>
-                {transactions.slice(0, 10).map(transaction => (
-                  <tr key={transaction.id} className="border-b border-[#222] hover:bg-[#232323]">
-                    <td className="py-3 px-3">
-                      <span className={`font-semibold ${transaction.type === "income" ? "text-teal-400" : "text-red-400"}`}>
-                        {transaction.type === "income" ? "+" : "-"}{transaction.amount} ج.م
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className={`px-2 py-1 rounded-full text-xs ${transaction.type === "income" ? "bg-teal-500/20 text-teal-400" : "bg-red-500/20 text-red-400"}`}>
-                        {transaction.type === "income" ? "دخل" : "مصروف"}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 hidden sm:table-cell text-gray-300">{transaction.category || "-"}</td>
-                    <td className="py-3 px-3 text-gray-300">{new Date(transaction.date).toLocaleDateString('ar-EG')}</td>
-                    <td className="py-3 px-3 hidden lg:table-cell text-gray-400 text-xs">{transaction.note || "-"}</td>
+          <div className="space-y-4">
+            {/* Desktop Table */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="min-w-full text-sm text-right">
+                <thead>
+                  <tr className="text-gray-300 border-b border-[#222]">
+                    <th className="py-3 px-3">المبلغ</th>
+                    <th className="py-3 px-3">النوع</th>
+                    <th className="py-3 px-3">التصنيف</th>
+                    <th className="py-3 px-3">التاريخ</th>
+                    <th className="py-3 px-3">ملاحظة</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {transactions.slice(-5).reverse().map(transaction => (
+                    <tr key={transaction.id} className="border-b border-[#222] hover:bg-[#232323]">
+                      <td className="py-3 px-3">
+                        <span className={`font-semibold ${transaction.type === "income" ? "text-teal-400" : "text-red-400"}`}>
+                          {transaction.type === "income" ? "+" : "-"}{transaction.amount} ج.م
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`px-2 py-1 rounded-full text-xs ${transaction.type === "income" ? "bg-teal-500/20 text-teal-400" : "bg-red-500/20 text-red-400"}`}>
+                          {transaction.type === "income" ? "دخل" : "مصروف"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-gray-300">{transaction.category || "-"}</td>
+                      <td className="py-3 px-3 text-gray-300">{new Date(transaction.date).toLocaleDateString('ar-EG')}</td>
+                      <td className="py-3 px-3 text-gray-400 text-xs">{transaction.note || "-"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="sm:hidden flex flex-col gap-4">
+              {transactions.slice(-5).reverse().map(transaction => (
+                <div key={transaction.id} className="bg-[#18181b] rounded-xl p-4 border border-[#222] shadow">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className={`font-bold text-lg ${transaction.type === "income" ? "text-teal-400" : "text-red-400"}`}>
+                      {transaction.type === "income" ? "+" : "-"}{transaction.amount} ج.م
+                    </span>
+                    <span className={`px-2 py-1 rounded-full text-xs ${transaction.type === "income" ? "bg-teal-500/20 text-teal-400" : "bg-red-500/20 text-red-400"}`}>
+                      {transaction.type === "income" ? "دخل" : "مصروف"}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-300 space-y-1">
+                    <div><span className="text-gray-400">التصنيف:</span> {transaction.category || "-"}</div>
+                    <div><span className="text-gray-400">التاريخ:</span> {new Date(transaction.date).toLocaleDateString('ar-EG')}</div>
+                    <div><span className="text-gray-400">ملاحظة:</span> {transaction.note || "-"}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
+
         )}
       </div>
 

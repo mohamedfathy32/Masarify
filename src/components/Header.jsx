@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { HiMenu, HiX } from "react-icons/hi";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { HiMenu, HiOutlineLogout, HiX } from "react-icons/hi";
 
 const publicLinks = [
   { to: "/contact", label: "تواصل معنا" },
@@ -29,10 +29,18 @@ function Header() {
 
   // if (["/login", "/register"].includes(location.pathname)) return null;
 
-
-
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      console.error("خطأ في تسجيل الخروج:", error);
+    }
   };
 
   return (
@@ -66,7 +74,7 @@ function Header() {
                   <img
                     src={user?.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"}
                     alt="صورة المستخدم"
-                    className={`w-8 h-8 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition ${user?.photoURL?'':'bg-gray-200 p-1'}`}
+                    className={`w-8 h-8 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition ${user?.photoURL ? '' : 'bg-gray-200 p-1'}`}
                     onClick={() => navigate('/settings')}
                   />
                   <Link
@@ -125,7 +133,7 @@ function Header() {
                         <img
                           src={user?.photoURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314b8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'/%3E%3C/svg%3E"}
                           alt="صورة المستخدم"
-                          className="w-10 h-10 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition bg-gradient-to-br from-teal-500 to-cyan-600 p-1"
+                          className="w-10 h-10 rounded-full object-cover border border-teal-500 cursor-pointer hover:opacity-80 transition "
                           onClick={() => {
                             navigate('/settings');
                             toggleMenu();
@@ -133,7 +141,6 @@ function Header() {
                         />
                         <div>
                           <div className="text-white font-medium">{user?.displayName || user?.email}</div>
-                          <div className="text-gray-400 text-sm">مستخدم مسجل</div>
                         </div>
                       </div>
                     </li>
@@ -170,8 +177,23 @@ function Header() {
                       </Link>
                     </li>
                   )}
+
                 </ul>
               </div>
+                {user && (
+                  <div className="mb-4 mx-5">
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        toggleMenu();
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium text-sm text-red-400 border border-red-500/30 hover:bg-red-500/10 hover:text-red-300 transition"
+                    >
+                      <HiOutlineLogout size={20} />
+                      <span>تسجيل الخروج</span>
+                    </button>
+                  </div>
+                )}
             </div>
           </>
         )}
