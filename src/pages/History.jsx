@@ -4,6 +4,7 @@ import useAuth from "../hooks/useAuth";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
+import Splash from "../components/Splash";
 
 function getMonthOptions(transactions) {
   const months = new Set();
@@ -16,8 +17,6 @@ function getMonthOptions(transactions) {
     return { year, month, label: `${format(new Date(year, month), "MMMM yyyy")}` };
   }).sort((a, b) => b.year - a.year || b.month - a.month);
 }
-
-
 
 function History() {
   const { user } = useAuth();
@@ -75,6 +74,10 @@ function History() {
     XLSX.utils.book_append_sheet(wb, ws, "سجل العمليات");
     XLSX.writeFile(wb, `سجل_${monthFilter ? monthFilter.year + '_' + (monthFilter.month + 1) : 'الكل'}.xlsx`);
   };
+
+  if (loading) {
+    return <Splash />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0f0f]">

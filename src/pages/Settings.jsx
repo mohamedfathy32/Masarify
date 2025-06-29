@@ -11,6 +11,7 @@ import {
   onNotificationMessage
 } from "../services/notificationService";
 import Swal from "sweetalert2";
+import Splash from "../components/Splash";
 
 function Settings() {
   const { user } = useAuth();
@@ -344,6 +345,10 @@ function Settings() {
   const togglePasswordVisibility = (field) => {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
   };
+
+  if (loading) {
+    return <Splash />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#0f0f0f]">

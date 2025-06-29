@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ar } from "date-fns/locale";
 import Swal from "sweetalert2";
 import { HiOutlineBell } from "react-icons/hi";
+import Splash from "../components/Splash";
 
 function Notifications() {
   const { user } = useAuth();
@@ -161,15 +162,7 @@ function Notifications() {
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-white text-lg">جاري تحميل الإشعارات...</div>
-          </div>
-        </main>
-      </div>
-    );
+    return <Splash />;
   }
 
   return (

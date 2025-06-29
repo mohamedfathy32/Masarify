@@ -10,6 +10,7 @@ import { format, getMonth, getYear, subMonths, parseISO, endOfMonth, differenceI
 import { Bar, Doughnut } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js";
 import { HiOutlineBell } from "react-icons/hi";
+import Splash from "../components/Splash";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement);
 
 
@@ -282,11 +283,7 @@ function Dashboard() {
 
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#0f0f0f]">
-        <div className="text-white text-lg">جاري تحميل البيانات...</div>
-      </div>
-    );
+    return <Splash />;
   }
 
   return (

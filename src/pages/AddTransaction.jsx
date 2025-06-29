@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { addTransaction } from "../services/transactionsService";
 import useAuth from "../hooks/useAuth";
-import { getExpenseCategories, getIncomeCategories, addIncomeCategory, initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
+import { getExpenseCategories, getIncomeCategories, addIncomeCategory, addExpenseCategory, initializeDefaultExpenseCategories, initializeDefaultIncomeCategories } from "../services/categoriesService";
 import { useNotifications } from "../hooks/useNotifications";
+import Splash from "../components/Splash";
 
 function AddTransaction() {
   const { user } = useAuth();
@@ -104,6 +105,7 @@ function AddTransaction() {
       // إذا اختار أخرى وأدخل تصنيف جديد للمصروف
       if (showNewExpenseCategory && newExpenseCategory.trim() && form.type === "expense") {
         finalCategory = newExpenseCategory.trim();
+        await addExpenseCategory(user.uid, finalCategory);
         setExpenseCategories(prev => [...prev, finalCategory]);
       }
       // إذا اختار أخرى وأدخل تصنيف جديد للدخل
@@ -156,13 +158,11 @@ function AddTransaction() {
   if (!filteredIncomeCategories.includes("أخرى")) filteredIncomeCategories.push("أخرى");
 
   if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
-        <main className="flex-1 flex items-center justify-center">
-          <div className="text-white">جاري تحميل التصنيفات...</div>
-        </main>
-      </div>
-    );
+    return <Splash />;
+  }
+
+  if (formLoading) {
+    return <Splash />;
   }
 
   return (
