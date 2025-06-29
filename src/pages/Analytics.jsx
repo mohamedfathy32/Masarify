@@ -4,6 +4,7 @@ import { getTransactionsByUser } from "../services/transactionsService";
 import useAuth from "../hooks/useAuth";
 import { format } from "date-fns";
 import * as XLSX from "xlsx";
+import Splash from "../components/Splash";
 
 const COLORS = ["#f97316", "#ef4444", "#facc15", "#a3e635", "#f472b6", "#10b981", "#3b82f6", "#8b5cf6", "#e879f9", "#14b8a6", "#fb923c", "#94a3b8"];
 
@@ -99,20 +100,25 @@ function Analytics() {
     XLSX.writeFile(wb, `تحليل_${selectedMonth.year}_${selectedMonth.month + 1}.xlsx`);
   };
 
+  if (loading) {
+    return <Splash />
+  }
+
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className="flex flex-col min-h-screen ">
       <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
           <div>
 
             <h2 className="text-2xl font-bold text-white">التقارير والتحليلات</h2>
-            <p className="text-sm text-gray-400 ">
+            <p className="text-sm text-white ">
               راقب مصروفاتك الشهرية، حلل بياناتك المالية، وصدّر التقارير بسهولة.
             </p>
           </div>
           <div className="flex gap-2 items-center">
             <select
-              className="p-2 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none"
+              className="p-2 rounded-lg border border-[#222] bg-[#18181b] text-gray-50 text-sm focus:outline-none"
               value={selectedMonth ? `${selectedMonth.year}-${selectedMonth.month}` : ""}
               onChange={e => {
                 const [year, month] = e.target.value.split("-").map(Number);
@@ -124,7 +130,7 @@ function Analytics() {
               ))}
             </select>
             <button
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow"
+              className="bg-green-600 hover:bg-green-700 text-gray-50 px-4 py-2 rounded-lg text-sm font-semibold shadow"
               onClick={handleExport}
             >
               تحميل كـ Excel
@@ -144,7 +150,7 @@ function Analytics() {
           </div>
           <div className="bg-[#18181b] rounded-xl p-6 text-center border border-[#232323] flex flex-col items-center justify-center min-h-[120px]">
             <div className="text-gray-300 text-xs mb-1">الرصيد الشهري</div>
-            <div className="text-xl font-bold text-white">{balance} ج.م</div>
+            <div className="text-xl font-bold text-gray-50">{balance} ج.م</div>
           </div>
           <div className="bg-[#18181b] rounded-xl p-6 text-center border border-[#232323] flex flex-col items-center justify-center min-h-[120px]">
             <div className="text-gray-300 text-xs mb-1">أكثر تصنيف صرف</div>
@@ -179,7 +185,7 @@ function Analytics() {
         {/* الرسوم البيانية */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mb-8">
           <div className="bg-[#18181b] rounded-2xl p-6 border border-[#232323] flex flex-col">
-            <h3 className="text-white text-base font-semibold mb-4">نسبة المصروفات حسب التصنيف</h3>
+            <h3 className="text-gray-50 text-base font-semibold mb-4">نسبة المصروفات حسب التصنيف</h3>
             <ResponsiveContainer width="100%" height={220} className="sm:h-[250px]">
               <PieChart>
                 <Pie data={expenseByCategory} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label>
@@ -192,7 +198,7 @@ function Analytics() {
             </ResponsiveContainer>
           </div>
           <div className="bg-[#18181b] rounded-2xl p-6 border border-[#232323] flex flex-col">
-            <h3 className="text-white text-base font-semibold mb-4">الدخل والمصروف خلال الشهر</h3>
+            <h3 className="text-gray-50 text-base font-semibold mb-4">الدخل والمصروف خلال الشهر</h3>
             <ResponsiveContainer width="100%" height={220} className="sm:h-[250px]">
               <BarChart data={dailyData}>
                 <XAxis dataKey="day" stroke="#d1d5db" fontSize={12} />

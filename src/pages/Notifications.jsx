@@ -7,10 +7,12 @@ import { ar } from "date-fns/locale";
 import Swal from "sweetalert2";
 import { HiOutlineBell } from "react-icons/hi";
 import Splash from "../components/Splash";
+import { useTheme } from "../hooks/useTheme";
 
 function Notifications() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { theme } = useTheme();
 
   // استخدام hook الإشعارات
   const {
@@ -161,19 +163,30 @@ function Notifications() {
     return format(date, "dd MMM yyyy - HH:mm", { locale: ar });
   };
 
+  // ألوان ديناميكية حسب الثيم
+  const cardBg = theme === "light" ? "bg-white/80" : "bg-[#18181b]";
+  const cardBorder = theme === "light" ? "border-gray-200" : "border-[#222]";
+  const cardText = theme === "light" ? "text-gray-800" : "text-white";
+  const cardSubText = theme === "light" ? "text-gray-500" : "text-gray-400";
+  const cardUnread = theme === "light" ? "border-teal-400/40 bg-teal-50" : "border-teal-500/30 bg-teal-500/5";
+  const cardRead = theme === "light" ? "opacity-70" : "opacity-75";
+  const btnMain = theme === "light" ? "bg-teal-500 text-white hover:bg-teal-600" : "bg-teal-500 text-gray-50 hover:bg-teal-600";
+  const btnDelete = theme === "light" ? "bg-red-500 text-white hover:bg-red-600" : "bg-red-500 text-gray-50 hover:bg-red-600";
+  // const btnSecondary = theme === "light" ? "bg-white/80 text-teal-600 hover:bg-gray-100" : "bg-white/20 text-teal-400 hover:bg-white/30";
+
   if (loading) {
     return <Splash />;
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className={`flex flex-col min-h-screen ${theme === "light" ? "bg-gray-100" : "bg-[#101014]"}`}>
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">الإشعارات</h1>
-              <p className="text-gray-400 mt-1">
+              <h1 className={`text-2xl sm:text-3xl font-bold ${cardText}`}>الإشعارات</h1>
+              <p className={`${cardText} mt-1`}>
                 {unreadCount > 0 ? `${unreadCount} إشعار غير مقروء` : "جميع الإشعارات مقروءة"}
               </p>
             </div>
@@ -181,14 +194,14 @@ function Notifications() {
               {notifications.some(n => n.isRead) && (
                 <button
                   onClick={handleDeleteAllRead}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition"
+                  className={`px-4 py-2 rounded-lg text-sm transition ${btnDelete}`}
                 >
                   حذف المقروءة
                 </button>
               )}
               <button
                 onClick={() => navigate('/dashboard')}
-                className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition"
+                className={`px-4 py-2 rounded-lg text-sm transition ${btnMain}`}
               >
                 العودة للوحة التحكم
               </button>
@@ -197,7 +210,7 @@ function Notifications() {
 
           {/* حالة الإشعارات */}
           {notificationStatus !== "granted" && (
-            <div className="bg-[#18181b] rounded-2xl p-6 mb-6 border border-yellow-500/20">
+            <div className={`${cardBg} rounded-2xl p-6 mb-6 border border-yellow-500/20`}>
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center">
                   <svg className="w-6 h-6 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,8 +218,8 @@ function Notifications() {
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-white font-semibold mb-1">الإشعارات غير مفعلة</h3>
-                  <p className="text-gray-400 text-sm mb-3">
+                  <h3 className={`${cardText} font-semibold mb-1`}>الإشعارات غير مفعلة</h3>
+                  <p className={`${cardSubText} text-sm mb-3`}>
                     {notificationStatus === "denied"
                       ? "تم رفض الإشعارات. اذهب إلى إعدادات المتصفح لتفعيلها."
                       : "قم بتفعيل الإشعارات لتصلك تنبيهات مهمة حول ميزانيتك ومعاملاتك."
@@ -215,7 +228,7 @@ function Notifications() {
                   {notificationStatus === "default" && (
                     <button
                       onClick={handleRequestPermission}
-                      className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition"
+                      className={`px-4 py-2 rounded-lg text-sm transition ${btnMain}`}
                     >
                       تفعيل الإشعارات
                     </button>
@@ -236,20 +249,20 @@ function Notifications() {
           {/* قائمة الإشعارات */}
           <div className="space-y-3">
             {notifications.length === 0 ? (
-              <div className="bg-[#18181b] rounded-2xl p-8 text-center">
+              <div className={`${cardBg} rounded-2xl p-8 text-center border ${cardBorder}`}>
                 <div className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <HiOutlineBell size={22} />
                 </div>
-                <h3 className="text-white font-semibold mb-2">لا توجد إشعارات</h3>
-                <p className="text-gray-400">ستظهر هنا الإشعارات الجديدة عندما تصل</p>
+                <h3 className={`${cardText} font-semibold mb-2`}>لا توجد إشعارات</h3>
+                <p className={cardSubText}>ستظهر هنا الإشعارات الجديدة عندما تصل</p>
               </div>
             ) : (
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`bg-[#18181b] rounded-xl p-4 border transition-all duration-200 ${notification.isRead
-                    ? 'border-[#222] opacity-75'
-                    : 'border-teal-500/30 bg-teal-500/5'
+                  className={`${cardBg} rounded-xl p-4 border transition-all duration-200 ${notification.isRead
+                    ? `${cardBorder} ${cardRead}`
+                    : `${cardUnread} border-2`
                     }`}
                 >
                   <div className="flex items-start gap-4">
@@ -258,13 +271,8 @@ function Notifications() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <h4 className={`font-medium mb-1 ${notification.isRead ? 'text-gray-300' : 'text-white'
-                            }`}>
-                            {notification.title}
-                          </h4>
-                          <p className="text-gray-400 text-sm mb-2">
-                            {notification.body}
-                          </p>
+                          <h4 className={`font-medium mb-1 ${notification.isRead ? cardSubText : cardText}`}>{notification.title}</h4>
+                          <p className={`${cardSubText} text-sm mb-2`}>{notification.body}</p>
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <span>{formatDate(notification.createdAt)}</span>
                             {!notification.isRead && (

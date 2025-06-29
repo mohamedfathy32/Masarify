@@ -166,7 +166,7 @@ function AddTransaction() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className="flex flex-col min-h-screen ">
       <main className="flex-1 p-4 sm:p-6 lg:p-8 text-right">
 
         {/* مقدمة ترحيبية */}

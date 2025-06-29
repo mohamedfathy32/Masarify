@@ -53,10 +53,10 @@ const Contact = () => {
       <div className="text-center max-w-2xl mx-auto mb-12">
         <FaEnvelope className="text-4xl text-teal-500 mb-3 mx-auto" />
         <h2 className="text-3xl sm:text-4xl font-bold text-white mb-2">تواصل معنا</h2>
-        <p className="text-gray-400 text-base sm:text-lg">
+        <p className="text-white text-base sm:text-lg">
           ارسل لنا رسالتك أو استفسارك في أي وقت، وسنكون سعداء بمساعدتك وتحسين تجربتك على Masarify.
         </p>
-        <p className="text-gray-500 text-sm mt-2">
+        <p className="text-white text-sm mt-2">
           إذا كان لديك اقتراحات أو أفكار لتطوير التطبيق، لا تتردد في مشاركتها معنا!
         </p>
       </div>
@@ -65,36 +65,36 @@ const Contact = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* بيانات التواصل الجانبية */}
         <div className="flex flex-col gap-6 justify-center">
-          <div className="bg-[#1f1f1f] rounded-xl p-5 flex items-center gap-4 border border-[#2a2a2a] shadow">
+          <div className="bg-card rounded-xl p-5 flex items-center gap-4 border border-[#2a2a2a] shadow">
             <FaEnvelope className="text-teal-400 text-2xl" />
             <div>
               <h4 className="text-white font-bold text-sm">البريد الإلكتروني</h4>
               <p className="text-gray-400 text-sm break-all">mohamedfathy2630@gmail.com</p>
             </div>
           </div>
-          <div className="bg-[#1f1f1f] rounded-xl p-5 flex items-center gap-4 border border-[#2a2a2a] shadow">
+          <div className="bg-card rounded-xl p-5 flex items-center gap-4 border border-[#2a2a2a] shadow">
             <FaPhone className="text-teal-400 text-2xl" />
             <div>
               <h4 className="text-white font-bold text-sm">رقم التواصل</h4>
               <p className="text-gray-400 text-sm">+201094976357</p>
             </div>
           </div>
-          <div className="bg-[#1f1f1f] rounded-xl p-5 flex flex-col gap-3 border border-[#2a2a2a] shadow">
+          <div className="bg-card rounded-xl p-5 flex flex-col gap-3 border border-[#2a2a2a] shadow">
             <h4 className="text-white font-bold text-sm">وسائل التواصل الاجتماعي</h4>
-            <div className="flex gap-4">
+            <div className="flex gap-4 text-white">
               {[
-                { icon: <FaWhatsapp />, url: "https://wa.me/201094976357", label: "واتساب" },
-                { icon: <FaFacebookF />, url: "https://www.facebook.com/mohamed.fathy.400599/", label: "فيسبوك" },
-                { icon: <FaLinkedinIn />, url: "https://www.linkedin.com/in/mohamed-fathy-3a3a49239/", label: "لينكدإن" },
-                { icon: <FaInstagram />, url: "https://www.instagram.com/mohamed_fathy26/", label: "إنستجرام" }
+                { icon: <FaWhatsapp className="text-gray-50" />, url: "https://wa.me/201094976357", label: "واتساب" },
+                { icon: <FaFacebookF className="text-gray-50" />, url: "https://www.facebook.com/mohamed.fathy.400599/", label: "فيسبوك" },
+                { icon: <FaLinkedinIn className="text-gray-50" />, url: "https://www.linkedin.com/in/mohamed-fathy-3a3a49239/", label: "لينكدإن" },
+                { icon: <FaInstagram className="text-gray-50" />, url: "https://www.instagram.com/mohamed_fathy26/", label: "إنستجرام" }
               ].map((item, i) => (
                 <a
                   key={i}
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#232323] hover:bg-teal-500 p-2 rounded-full transition-colors"
                   aria-label={item.label}
+                  className="bg-[#232323] hover:bg-teal-500 p-2 rounded-full transition-colors"
                 >
                   {item.icon}
                 </a>
@@ -104,7 +104,7 @@ const Contact = () => {
         </div>
 
         {/* النموذج */}
-        <div className="bg-[#181818] rounded-xl p-6 shadow-md border border-[#232323]">
+        <div className="bg-card rounded-xl p-6 shadow-md border border-[#232323]">
           <p className="text-gray-400 text-sm sm:text-base mb-6 leading-relaxed">
             هل عندك سؤال، استفسار، أو حتى اقتراح يساعدنا نطور Masarify؟
             <span className="text-teal-400 font-semibold"> اكتب لنا رسالتك 👇</span>،
@@ -118,7 +118,7 @@ const Contact = () => {
               { label: "الموضوع", icon: <FaTag />, name: "subject", type: "text", placeholder: "استفسار، اقتراح،..." }
             ].map((field, i) => (
               <div key={i} className="flex flex-col gap-2">
-                <label className="text-gray-300 font-medium flex items-center gap-2">
+                <label className="text-white font-medium flex items-center gap-2">
                   {field.icon} {field.label}
                 </label>
                 <input
@@ -134,7 +134,7 @@ const Contact = () => {
             ))}
 
             <div className="flex flex-col gap-2">
-              <label className="text-gray-300 font-medium flex items-center gap-2"><FaCommentDots /> الرسالة</label>
+              <label className="text-gray-300 font-medium flex items-center gap-2 text-white"><FaCommentDots /> الرسالة</label>
               <textarea
                 name="message"
                 rows={5}

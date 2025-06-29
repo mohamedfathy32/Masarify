@@ -57,7 +57,7 @@ function DashboardSidebar() {
       {/* Mobile Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 right-4 z-50 bg-[#18181b] border border-[#222] p-2 rounded-lg text-white hover:text-teal-400 transition-colors"
+        className="lg:hidden fixed top-4 right-4 z-50 border border-[#222] p-2 rounded-lg text-white hover:text-teal-400 transition-colors"
         aria-label="Toggle sidebar"
       >
         {isOpen ? <HiX size={20} /> : <HiMenu size={20} />}
@@ -66,14 +66,15 @@ function DashboardSidebar() {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="lg:hidden fixed inset-0  bg-opacity-50 z-40"
           onClick={toggleSidebar}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`bg-[#18181b] min-h-screen py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 h-screen z-40 ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        {/* Masarify Logo/Link */}
+      <aside
+        className={`py-8 px-4 w-full max-w-[220px] flex flex-col gap-2 border-l border-[#222] transition-transform duration-300 ease-in-out lg:translate-x-0 lg:relative fixed top-0 right-0 min-h-full z-[9999] bg-card ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+      >        {/* Masarify Logo/Link */}
         <Link
           to="/"
           className="text-2xl font-bold text-teal-400 text-center mb-6 hover:text-teal-300 transition-colors no-underline"
@@ -82,13 +83,13 @@ function DashboardSidebar() {
           Masarify
         </Link>
 
-        <nav className="flex flex-col gap-2 flex-1">
+        <nav className="flex flex-col gap-2 flex-1 h-full">
           {links.map(link => (
             <NavLink
               key={link.to}
               to={link.to}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 no-underline relative ${isActive ? "bg-teal-500/20 text-teal-400" : "text-gray-200 hover:bg-[#232323]"}`
+                `flex items-center text-white gap-3 px-4 py-3 rounded-lg font-medium text-sm sm:text-base transition-colors duration-200 no-underline relative ${isActive ? "bg-teal-500/20 text-teal-400" : "text-gray-200 hover:bg-gray-500"}`
               }
               end={link.to === "/dashboard"}
               onClick={() => setIsOpen(false)}

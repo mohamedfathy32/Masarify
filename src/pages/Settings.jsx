@@ -12,6 +12,7 @@ import {
 } from "../services/notificationService";
 import Swal from "sweetalert2";
 import Splash from "../components/Splash";
+import { useTheme } from "../hooks/useTheme";
 
 function Settings() {
   const { user } = useAuth();
@@ -52,11 +53,12 @@ function Settings() {
   });
   const [notificationStatus, setNotificationStatus] = useState("default");
   const fileInputRef = useRef();
+  const { theme, setTheme, fontSize, setFontSize } = useTheme();
 
   // صورة افتراضية للمستخدم
   const defaultAvatar = (
     <div className="w-32 h-32 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center border-4 border-white/20 shadow-lg">
-      <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-16 h-16 text-gray-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
     </div>
@@ -351,7 +353,7 @@ function Settings() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className="flex flex-col min-h-screen ">
       <main className="flex-1 p-4 sm:p-6 lg:p-8">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">الإعدادات الشخصية</h2>
@@ -361,7 +363,7 @@ function Settings() {
             <button
               onClick={() => setActiveTab("profile")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "profile"
-                ? "bg-teal-500 text-white"
+                ? "bg-teal-500 text-gray-50"
                 : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
                 }`}
             >
@@ -370,7 +372,7 @@ function Settings() {
             <button
               onClick={() => setActiveTab("security")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "security"
-                ? "bg-teal-500 text-white"
+                ? "bg-teal-500 text-gray-50"
                 : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
                 }`}
             >
@@ -379,7 +381,7 @@ function Settings() {
             <button
               onClick={() => setActiveTab("notifications")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "notifications"
-                ? "bg-teal-500 text-white"
+                ? "bg-teal-500 text-gray-50"
                 : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
                 }`}
             >
@@ -388,7 +390,7 @@ function Settings() {
             <button
               onClick={() => setActiveTab("appearance")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "appearance"
-                ? "bg-teal-500 text-white"
+                ? "bg-teal-500 text-gray-50"
                 : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
                 }`}
             >
@@ -397,7 +399,7 @@ function Settings() {
             {/* <button
               onClick={() => setActiveTab("budget")}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${activeTab === "budget"
-                ? "bg-teal-500 text-white"
+                ? "bg-teal-500 text-gray-50"
                 : "bg-[#18181b] text-gray-300 hover:bg-[#232323]"
                 }`}
             >
@@ -409,7 +411,7 @@ function Settings() {
           {activeTab === "profile" && (
             <div className="w-full">
               <form onSubmit={handleSave} className="bg-[#18181b] rounded-2xl p-6 shadow space-y-4 max-w-2xl mx-auto">
-                <h3 className="text-lg font-semibold text-white mb-4 text-center">البيانات الشخصية</h3>
+                <h3 className="text-lg font-semibold text-gray-50 mb-4 text-center">البيانات الشخصية</h3>
 
                 <div className="flex flex-col items-center mb-6">
                   <div className="relative w-32 h-32 mb-4 cursor-pointer" onClick={() => fileInputRef.current.click()}>
@@ -423,7 +425,7 @@ function Settings() {
                       defaultAvatar
                     )}
                     <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 hover:opacity-100 transition">
-                      <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-8 h-8 text-gray-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
@@ -453,7 +455,7 @@ function Settings() {
                       name="name"
                       value={form.name}
                       onChange={handleChange}
-                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                       maxLength={40}
                     />
                   </div>
@@ -464,7 +466,7 @@ function Settings() {
                       name="phone"
                       value={form.phone}
                       onChange={handleChange}
-                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                      className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                       maxLength={20}
                     />
                   </div>
@@ -487,7 +489,7 @@ function Settings() {
                     name="city"
                     value={form.city}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                     maxLength={30}
                   />
                 </div>
@@ -498,7 +500,7 @@ function Settings() {
                     name="bio"
                     value={form.bio}
                     onChange={handleChange}
-                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-white text-sm focus:outline-none focus:border-teal-500"
+                    className="w-full p-3 rounded-lg border border-[#222] bg-[#0f0f0f] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                     maxLength={200}
                     rows={3}
                   />
@@ -509,7 +511,7 @@ function Settings() {
 
                 <button
                   type="submit"
-                  className="w-full bg-teal-500 text-white font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full bg-teal-500 text-gray-50 font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60 disabled:cursor-not-allowed"
                   disabled={loading || imgUploading}
                 >
                   {loading ? "جاري الحفظ..." : "حفظ التغييرات"}
@@ -521,16 +523,16 @@ function Settings() {
           {/* Security Tab */}
           {activeTab === "security" && (
             <div className="bg-[#18181b] rounded-2xl p-6 shadow">
-              <h3 className="text-lg font-semibold text-white mb-4">إعدادات الأمان</h3>
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">إعدادات الأمان</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">تغيير كلمة المرور</h4>
+                    <h4 className="text-gray-50 font-medium">تغيير كلمة المرور</h4>
                     <p className="text-gray-400 text-sm">قم بتحديث كلمة المرور الخاصة بك</p>
                   </div>
                   <button
                     onClick={() => setShowPasswordForm(!showPasswordForm)}
-                    className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition"
+                    className="bg-teal-500 text-gray-50 px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition"
                   >
                     تغيير
                   </button>
@@ -546,13 +548,13 @@ function Settings() {
                           name="currentPassword"
                           value={passwordForm.currentPassword}
                           onChange={handlePasswordChange}
-                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => togglePasswordVisibility('current')}
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-50"
                         >
                           {showPasswords.current ? (
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -576,13 +578,13 @@ function Settings() {
                           name="newPassword"
                           value={passwordForm.newPassword}
                           onChange={handlePasswordChange}
-                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => togglePasswordVisibility('new')}
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-50"
                         >
                           {showPasswords.new ? (
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -606,13 +608,13 @@ function Settings() {
                           name="confirmPassword"
                           value={passwordForm.confirmPassword}
                           onChange={handlePasswordChange}
-                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-white text-sm focus:outline-none focus:border-teal-500"
+                          className="w-full p-3 pr-10 rounded-lg border border-[#222] bg-[#18181b] text-gray-50 text-sm focus:outline-none focus:border-teal-500"
                           required
                         />
                         <button
                           type="button"
                           onClick={() => togglePasswordVisibility('confirm')}
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-50"
                         >
                           {showPasswords.confirm ? (
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -631,7 +633,7 @@ function Settings() {
                     <div className="flex gap-2">
                       <button
                         type="submit"
-                        className="bg-teal-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition disabled:opacity-60"
+                        className="bg-teal-500 text-gray-50 px-4 py-2 rounded-lg text-sm hover:bg-teal-600 transition disabled:opacity-60"
                         disabled={passwordLoading}
                       >
                         {passwordLoading ? "جاري التحديث..." : "تحديث كلمة المرور"}
@@ -639,7 +641,7 @@ function Settings() {
                       <button
                         type="button"
                         onClick={() => setShowPasswordForm(false)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition"
+                        className="bg-gray-500 text-gray-50 px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition"
                       >
                         إلغاء
                       </button>
@@ -653,13 +655,13 @@ function Settings() {
           {/* Notifications Tab */}
           {activeTab === "notifications" && (
             <div className="bg-[#18181b] rounded-2xl p-6 shadow">
-              <h3 className="text-lg font-semibold text-white mb-4">إعدادات الإشعارات</h3>
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">إعدادات الإشعارات</h3>
 
               {/* حالة الإشعارات */}
               <div className="mb-6 p-4 bg-[#0f0f0f] rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h4 className="text-white font-medium">حالة الإشعارات</h4>
+                    <h4 className="text-gray-50 font-medium">حالة الإشعارات</h4>
                     <p className="text-gray-400 text-sm">
                       {notificationStatus === "granted" && "الإشعارات مفعلة"}
                       {notificationStatus === "denied" && "الإشعارات مرفوضة"}
@@ -681,7 +683,7 @@ function Settings() {
                 {notificationStatus === "default" && (
                   <button
                     onClick={handleRequestNotificationPermission}
-                    className="w-full bg-teal-500 text-white font-semibold p-3 rounded-lg hover:bg-teal-600 transition"
+                    className="w-full bg-teal-500 text-gray-50 font-semibold p-3 rounded-lg hover:bg-teal-600 transition"
                   >
                     تفعيل الإشعارات
                   </button>
@@ -695,11 +697,11 @@ function Settings() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-white font-medium mb-3">تنبيهات الميزانية</h4>
+                <h4 className="text-gray-50 font-medium mb-3">تنبيهات الميزانية</h4>
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">تنبيه 50% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">تنبيه 50% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 50% من ميزانيتك</p>
                   </div>
                   <input
@@ -713,7 +715,7 @@ function Settings() {
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">تنبيه 80% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">تنبيه 80% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 80% من ميزانيتك</p>
                   </div>
                   <input
@@ -727,7 +729,7 @@ function Settings() {
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">تنبيه 100% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">تنبيه 100% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">إشعار عند الوصول لـ 100% من ميزانيتك</p>
                   </div>
                   <input
@@ -739,11 +741,11 @@ function Settings() {
                   />
                 </div>
 
-                <h4 className="text-white font-medium mb-3 mt-6">إشعارات أخرى</h4>
+                <h4 className="text-gray-50 font-medium mb-3 mt-6">إشعارات أخرى</h4>
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">إشعارات العمليات</h4>
+                    <h4 className="text-gray-50 font-medium">إشعارات العمليات</h4>
                     <p className="text-gray-400 text-sm">إشعارات عند إضافة عمليات جديدة</p>
                   </div>
                   <input
@@ -757,7 +759,7 @@ function Settings() {
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">التقرير الأسبوعي</h4>
+                    <h4 className="text-gray-50 font-medium">التقرير الأسبوعي</h4>
                     <p className="text-gray-400 text-sm">تقرير أسبوعي بمصروفاتك</p>
                   </div>
                   <input
@@ -771,7 +773,7 @@ function Settings() {
 
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">تذكير بداية الشهر</h4>
+                    <h4 className="text-gray-50 font-medium">تذكير بداية الشهر</h4>
                     <p className="text-gray-400 text-sm">تذكير لإعداد ميزانية الشهر الجديد</p>
                   </div>
                   <input
@@ -788,47 +790,61 @@ function Settings() {
 
           {/* Appearance Tab */}
           {activeTab === "appearance" && (
-            <div className="bg-[#18181b] rounded-2xl p-6 shadow relative opacity-60 pointer-events-none">
-              <span className="absolute top-3 left-3 bg-yellow-500 text-black text-xs font-bold px-2 py-0.5 rounded-full">
-                قريبًا
-              </span>
-              <h3 className="text-lg font-semibold text-white mb-4">إعدادات المظهر</h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+            <div className="bg-[#18181b] rounded-2xl p-6 shadow">
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">إعدادات المظهر</h3>
+              <div className="space-y-6">
+                {/* اختيار الوضع */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[#0f0f0f] rounded-lg gap-4">
                   <div>
-                    <h4 className="text-white font-medium">الوضع المظلم</h4>
-                    <p className="text-gray-400 text-sm">تفعيل المظهر المظلم</p>
+                    <h4 className="text-gray-50 font-medium mb-1">وضع الموقع</h4>
+                    <p className="text-gray-400 text-sm">اختر بين الوضع المظلم أو الفاتح أو تلقائي حسب النظام</p>
                   </div>
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-teal-500"
-                    disabled
-                  />
+                  <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                    <button
+                      dir="ltr"
+                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                      className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors duration-300 ${theme === "dark" ? "bg-teal-500" : "bg-gray-400"
+                        }`}
+                    >
+                      <div
+                        className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${theme === "dark" ? "translate-x-6" : "translate-x-0"
+                          }`}
+                      />
+                    </button>
+                  </div>
+
                 </div>
-                <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
+                {/* اختيار حجم الخط */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-[#0f0f0f] rounded-lg gap-4">
                   <div>
-                    <h4 className="text-white font-medium">حجم الخط</h4>
-                    <p className="text-gray-400 text-sm">تخصيص حجم النصوص</p>
+                    <h4 className="text-gray-50 font-medium mb-1">حجم الخط</h4>
+                    <p className="text-gray-400 text-sm">اختر حجم الخط المناسب لك</p>
                   </div>
-                  <select className="bg-[#232323] text-white px-3 py-2 rounded-lg text-sm" disabled>
-                    <option>صغير</option>
-                    <option selected>متوسط</option>
-                    <option>كبير</option>
-                  </select>
+                  <div className="mt-2 sm:mt-0">
+                    <select
+                      value={fontSize}
+                      onChange={(e) => setFontSize(e.target.value)}
+                      className="bg-[#232323] border border-[#232323] text-gray-300 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                      <option value="small">صغير</option>
+                      <option value="normal">عادي</option>
+                      <option value="large">كبير</option>
+                    </select>
+                  </div>
                 </div>
+
               </div>
             </div>
-
           )}
 
           {/* Budget Settings Tab */}
           {/* {activeTab === "budget" && (
             <div className="bg-[#18181b] rounded-2xl p-6 shadow">
-              <h3 className="text-lg font-semibold text-white mb-4">إعدادات إشعارات الميزانية</h3>
+              <h3 className="text-lg font-semibold text-gray-50 mb-4">إعدادات إشعارات الميزانية</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">إشعار عند 50% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">إشعار عند 50% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">تنبيه عند إنفاق نصف الميزانية</p>
                   </div>
                   <input
@@ -840,7 +856,7 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">إشعار عند 80% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">إشعار عند 80% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">تنبيه عند اقتراب تجاوز الميزانية</p>
                   </div>
                   <input
@@ -852,7 +868,7 @@ function Settings() {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-[#0f0f0f] rounded-lg">
                   <div>
-                    <h4 className="text-white font-medium">إشعار عند 100% من الميزانية</h4>
+                    <h4 className="text-gray-50 font-medium">إشعار عند 100% من الميزانية</h4>
                     <p className="text-gray-400 text-sm">تنبيه عند تجاوز الميزانية</p>
                   </div>
                   <input
@@ -865,11 +881,11 @@ function Settings() {
                 <div className="mt-6">
                   <button
                     onClick={handleSave}
-                    className="w-full bg-teal-500 text-white font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60"
+                    className="w-full bg-teal-500 text-gray-50 font-semibold text-base p-3 rounded-lg border-none cursor-pointer transition hover:bg-teal-600 disabled:opacity-60"
                     disabled={loading}
                   >
                     {loading ? "جاري الحفظ..." : "حفظ إعدادات الإشعارات"}
-                  </button>
+        </button>
                 </div>
               </div>
             </div>

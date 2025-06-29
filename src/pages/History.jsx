@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
 import Splash from "../components/Splash";
+import { useTheme } from "../hooks/useTheme";
 
 function getMonthOptions(transactions) {
   const months = new Set();
@@ -27,6 +28,7 @@ function History() {
   const [dateFilter, setDateFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState(null);
   const [search, setSearch] = useState("");
+  const { theme } = useTheme();
 
   useEffect(() => {
     if (!user) return;
@@ -80,22 +82,22 @@ function History() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0f0f0f]">
+    <div className="flex flex-col min-h-screen ">
       <main className="flex-1 p-4 sm:p-6 lg:p-8 text-right">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">سجل العمليات</h2>
-            <p className="text-sm text-gray-400">تتبع جميع عملياتك المالية مع إمكانية الفلترة والتصدير.</p>
+            <p className="text-sm text-white">تتبع جميع عملياتك المالية مع إمكانية الفلترة والتصدير.</p>
           </div>
           <div className="flex gap-2 items-center flex-wrap justify-end">
             <button
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow"
+              className="bg-cyan-600 hover:bg-cyan-700 text-gray-50 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow"
               onClick={() => navigate('/add')}
             >
               + إضافة عملية
             </button>
             <button
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow"
+              className="bg-green-600 hover:bg-green-700 text-gray-50 px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold shadow"
               onClick={handleExport}
               disabled={filtered.length === 0}
             >
@@ -110,7 +112,7 @@ function History() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="ابحث في الملاحظات أو التصنيفات..."
-            className="w-full p-3 rounded-lg border border-[#232323] bg-[#18181b] text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full p-3 rounded-lg border border-black bg-[#18181b] text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
             dir="rtl"
           />
         </div>
@@ -119,7 +121,7 @@ function History() {
           <select 
             value={typeFilter} 
             onChange={e => setTypeFilter(e.target.value)} 
-            className="p-2 rounded border border-[#222] bg-[#0f0f0f] text-white text-sm w-full"
+            className="p-2 rounded border border-[#222] text-sm w-full bg-black"
           >
             <option value="">كل الأنواع</option>
             <option value="income">دخل</option>
@@ -131,7 +133,7 @@ function History() {
               const [year, month] = e.target.value.split("-").map(Number);
               setMonthFilter({ year, month });
             }}
-            className="p-2 rounded border border-[#222] bg-[#0f0f0f] text-white text-sm w-full"
+            className="p-2 rounded border border-[#222] text-sm w-full"
           >
             <option value="">كل الشهور</option>
             {monthOptions.map(opt => (
@@ -143,7 +145,7 @@ function History() {
             value={dateFilter} 
             onChange={e => setDateFilter(e.target.value)} 
             className="p-2 rounded border border-[#222] bg-[#0f0f0f] text-white text-sm w-full focus:ring-2 focus:ring-cyan-500"
-            style={{ colorScheme: 'dark' }}
+            style={{ colorScheme: theme }}
           />
         </div>
         <div className="bg-[#18181b] rounded-2xl p-4 sm:p-6 shadow overflow-x-auto">

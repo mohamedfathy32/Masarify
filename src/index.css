@@ -5,36 +5,81 @@ html {
   font-family: "Cairo", sans-serif;
 }
 
+/* Theme & Font Size Variables */
 :root {
   --color-bg: #0f0f0f;
+  --color-bg-alt: #18181b;
+  --color-text: #fff;
+  --color-text-alt: #cbd5e1;
   --color-primary: #14b8a6;
-  --color-text-main: #fff;
-  --color-text-secondary: #d1d5db;
-  --color-alert-orange: #f97316;
-  --color-alert-red: #ef4444;
-  --font-main: "Inter", "Poppins", Arial, sans-serif;
+  --font-size-base: 16px;
+  --color-input-bg: #18181b;
+}
+
+[data-theme="light"] {
+  --color-bg: #e4e6e9;
+  --color-bg-alt: #f0f2f5;
+  --color-text: #232323;
+  --color-text-alt: #555;
+  --color-primary: #0d9488;
+  --color-card: #fff;
+  --color-border: #e2e8f0;
+  --color-input-bg: #f1f5f9;
+  --color-input-border: #cbd5e1;
+  
+}
+
+[data-font-size="small"] {
+  --font-size-base: 14px;
+}
+[data-font-size="normal"] {
+  --font-size-base: 16px;
+}
+[data-font-size="large"] {
+  --font-size-base: 19px;
 }
 
 body {
   background: var(--color-bg);
-  color: var(--color-text-main);
-  font-family: var(--font-main);
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  box-sizing: border-box;
+  color: var(--color-text);
+  font-size: var(--font-size-base);
 }
 
-/* a {
-  color: var(--color-primary);
-  text-decoration: none;
-  transition: color 0.2s;
+input, textarea, select {
+  background-color: var(--color-input-bg);
+  color: var(--color-text);
+  border-color: var(--color-input-border);
 }
 
-a:hover {
-  color: var(--color-text-secondary);
-} */
+.text-gray-400 { color: var(--color-text-alt) !important; }
+.text-teal-500 { color: var(--color-primary) !important; }
 
-* {
-  box-sizing: inherit;
+[data-theme="light"] .text-gray-400 {
+  color: #555 !important;
 }
+[data-theme="light"] .text-white {
+  color: #232323 !important;
+}
+
+/* كروت وحدود وإدخالات للثيم الفاتح */
+[data-theme="light"] body {
+  background-color: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+[data-theme="light"] .bg-card, [data-theme="light"] .card, [data-theme="light"] .bg-alt {
+  /* border and shadow remain as في الكلاسات العادية فقط */
+}
+
+/* --- تحسين وضوح النصوص في الوضع الفاتح --- */
+.text-main { color: var(--color-text) !important; }
+.text-heading { color: #232323 !important; }
+[data-theme="light"] .text-heading { color: #111 !important; }
+[data-theme="light"] .text-gray-400 { color: #888 !important; }
+/* تم تعطيل تحويل text-white في الوضع الفاتح حتى لا يصبح داكن جداً */
+/* [data-theme="light"] .text-white { color: #232323 !important; } */
+
+/* يمكنك إضافة المزيد من التخصيصات حسب الحاجة */
+
+.bg-main { background-color: var(--color-bg) !important; }
+.bg-alt { background-color: var(--color-bg-alt) !important; }
+.bg-card { background-color: var(--color-card, var(--color-bg-alt)) !important; }

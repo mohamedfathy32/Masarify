@@ -287,7 +287,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
       {/* Header */}
       <div className="flex justify-between items-center mb-8 gap-0.5">
         <div className="flex flex-col max-w-[70%]">
@@ -313,12 +313,12 @@ function Dashboard() {
 
         <button
           onClick={() => navigate('/notifications')}
-          className="relative bg-[#18181b] text-white p-3 rounded-lg hover:bg-[#232323] transition border border-[#222]"
+          className="relative bg-[#18181b] text-gray-50 p-3 rounded-lg hover:bg-[#232323] transition border border-[#222]"
         >
 
           <HiOutlineBell size={22} />
           {unreadNotifications > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            <span className="absolute -top-1 -right-1 bg-red-500 text-gray-50 text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
               {unreadNotifications > 99 ? '99+' : unreadNotifications}
             </span>
           )}
@@ -327,17 +327,17 @@ function Dashboard() {
       </div>
 
       {/* الميزانية الشهرية - كارد كبير */}
-      <div className="bg-[#181818] rounded-2xl p-6 mb-8 text-white">
+      <div className="bg-[#181818] rounded-2xl p-6 mb-8 text-gray-50">
         <div className="flex justify-between items-start mb-4">
           <div>
             <h2 className="text-xl font-bold mb-2">الميزانية الشهرية</h2>
-            <p className="text-teal-100">تتبع مصروفاتك مقابل ميزانيتك</p>
+            <p className="text-x">تتبع مصروفاتك مقابل ميزانيتك</p>
             <div className="mt-2 text-sm text-cyan-200">عدد الأيام المتبقية في الشهر: <span className="font-bold">{daysLeft}</span></div>
           </div>
           {!showBudgetForm && currentBudget && (
             <button
               onClick={() => setShowBudgetForm(true)}
-              className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/30 transition"
+              className="bg-white/20 backdrop-blur-sm text-gray-50 px-4 py-2 rounded-lg hover:bg-white/30 transition"
             >
               تعديل الميزانية
             </button>
@@ -349,18 +349,18 @@ function Dashboard() {
             <div className="text-center mb-2">
               {!currentBudget && !showBudgetForm && (
                 <>
-                  <div className="text-lg font-semibold mb-2 text-white">لم تقم بإعداد ميزانية لهذا الشهر</div>
+                  <div className="text-lg font-semibold mb-2 text-gray-50">لم تقم بإعداد ميزانية لهذا الشهر</div>
                   <div className="text-gray-300 mb-4">أدخل ميزانيتك الشهرية للبدء في تتبع مصروفاتك</div>
                 </>
               )}
             </div>
             <div>
-              <label className="block text-white mb-2 text-sm font-medium">ميزانية الشهر الحالي (ج.م)</label>
+              <label className="block text-gray-50 mb-2 text-sm font-medium">ميزانية الشهر الحالي (ج.م)</label>
               <input
                 type="number"
                 value={budgetAmount}
                 onChange={(e) => setBudgetAmount(e.target.value)}
-                className="w-full p-3 rounded-lg border-0 bg-white/20 backdrop-blur-sm text-white text-center text-lg focus:outline-none focus:ring-2 focus:ring-white/50 placeholder-white/70"
+                className="w-full p-3 rounded-lg  bg-white/20 border backdrop-blur-sm text-gray-50 text-center text-lg focus:outline-none focus:ring-2 focus:ring-white/50 placeholder-white/70"
                 min="1"
                 required
                 placeholder="أدخل الميزانية"
@@ -369,7 +369,7 @@ function Dashboard() {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex-1 bg-teal-500 text-white font-semibold p-3 rounded-lg hover:bg-teal-600 transition disabled:opacity-60"
+                className="flex-1 bg-teal-500 text-gray-50 font-semibold p-3 rounded-lg hover:bg-teal-600 transition disabled:opacity-60"
                 disabled={budgetLoading}
               >
                 {budgetLoading ? "جاري الحفظ..." : (!currentBudget ? "إضافة الميزانية" : "حفظ التعديل")}
@@ -381,7 +381,7 @@ function Dashboard() {
                     setShowBudgetForm(false);
                     setBudgetAmount(currentBudget?.amount?.toString() || "");
                   }}
-                  className="flex-1 bg-white/20 backdrop-blur-sm text-white font-semibold p-3 rounded-lg hover:bg-white/30 transition"
+                  className="flex-1 bg-white/20 backdrop-blur-sm text-gray-50 font-semibold p-3 rounded-lg hover:bg-white/30 transition"
                 >
                   إلغاء
                 </button>
@@ -444,7 +444,7 @@ function Dashboard() {
               {incomeChange.value}%
             </span>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">{currentStats.income} ج.م</div>
+          <div className="text-2xl font-bold text-gray-50 mb-1">{currentStats.income} ج.م</div>
           <div className="text-gray-400 text-sm">إجمالي الدخل</div>
         </div>
 
@@ -459,7 +459,7 @@ function Dashboard() {
               {expenseChange.value}%
             </span>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">{currentStats.expense} ج.م</div>
+          <div className="text-2xl font-bold text-gray-50 mb-1">{currentStats.expense} ج.م</div>
           <div className="text-gray-400 text-sm">إجمالي المصروفات</div>
         </div>
 
@@ -474,7 +474,7 @@ function Dashboard() {
               {balanceChange.value}%
             </span>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">{currentStats.balance} ج.م</div>
+          <div className="text-2xl font-bold text-gray-50 mb-1">{currentStats.balance} ج.م</div>
           <div className="text-gray-400 text-sm">الرصيد الشهري</div>
         </div>
 
@@ -487,7 +487,7 @@ function Dashboard() {
               {budgetStatus.status === "جيد" ? "✅" : "⚠️"}
             </span>
           </div>
-          <div className="text-2xl font-bold text-white mb-1">{currentStats.savingRate}%</div>
+          <div className="text-2xl font-bold text-gray-50 mb-1">{currentStats.savingRate}%</div>
           <div className="text-gray-400 text-sm">نسبة التوفير</div>
         </div>
       </div>
@@ -496,13 +496,13 @@ function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* رسم بياني شريطي */}
         <div className="bg-[#18181b] rounded-2xl p-6 border border-[#232323]">
-          <h3 className="text-white text-lg font-semibold mb-4">مقارنة آخر 3 شهور</h3>
+          <h3 className="text-gray-50 text-lg font-semibold mb-4">مقارنة آخر 3 شهور</h3>
           <Bar data={barChartData} options={barChartOptions} height={300} />
         </div>
 
         {/* رسم بياني دائري للمصروفات */}
         <div className="bg-[#18181b] rounded-2xl p-6 border border-[#232323]">
-          <h3 className="text-white text-lg font-semibold mb-4">توزيع المصروفات حسب التصنيف</h3>
+          <h3 className="text-gray-50 text-lg font-semibold mb-4">توزيع المصروفات حسب التصنيف</h3>
           {Object.keys(currentStats.expenseByCat).length > 0 ? (
             <Doughnut data={pieChartData} options={pieChartOptions} height={300} />
           ) : (
@@ -515,7 +515,7 @@ function Dashboard() {
 
       {/* العمليات الأخيرة */}
       <div className="bg-[#18181b] rounded-2xl p-6 border border-[#232323]">
-        <h3 className="text-white text-lg font-semibold mb-4">العمليات الأخيرة</h3>
+        <h3 className="text-gray-50 text-lg font-semibold mb-4">العمليات الأخيرة</h3>
         {transactions.length === 0 ? (
           <div className="text-gray-400 text-center py-8">لا توجد عمليات بعد.</div>
         ) : (
@@ -582,7 +582,7 @@ function Dashboard() {
       {/* زر عائم لإضافة عملية */}
       <button
         onClick={() => navigate('/add')}
-        className="fixed bottom-6 right-6 z-50 bg-cyan-500 hover:bg-cyan-600 text-white rounded-full shadow-lg w-16 h-16 flex items-center justify-center text-3xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300"
+        className="fixed bottom-6 right-6 z-50 bg-cyan-500 hover:bg-cyan-600 text-gray-50 rounded-full shadow-lg w-16 h-16 flex items-center justify-center text-3xl transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-cyan-300"
         title="إضافة عملية جديدة"
         style={{ boxShadow: '0 4px 24px 0 rgba(34,211,238,0.25)' }}
       >

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate, Outlet, useLocation } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -28,7 +28,7 @@ function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen ">
       <Header />
-      <main className="flex-1 px-4 ">
+      <main className="flex-1  ">
         <Outlet />
       </main>
       <Footer />
@@ -38,7 +38,7 @@ function MainLayout() {
 
 function DashboardLayout() {
   return (
-    <div className="flex min-h-screen bg-[#0f0f0f]">
+    <div className="flex min-h-screen ">
       <DashboardSidebar />
       <main className="flex-1 overflow-auto">
         <Outlet />
